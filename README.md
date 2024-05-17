@@ -1,4 +1,4 @@
-# Tài liệu hệ thống: [link](https://www.notion.so/T-i-li-u-h-th-ng-Film1080-0d6f5e1d56ee433da7747fb0f2e5600e)
+# Tài liệu hệ thống: [link](https://rainy-infinity-73a.notion.site/T-i-li-u-h-th-ng-Film1080-0d6f5e1d56ee433da7747fb0f2e5600e?pvs=4)
 
 ## Thành Viên
 
