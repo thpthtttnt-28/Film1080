@@ -18,12 +18,17 @@ def index(request):
 
     if query:
         movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
-        # movie with similar genre
-        recommender = ContentBasedRecommender()
-        recommended_movie_ids = recommender.recommend(query, k=5)
-        movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
-        return render(request, 'recommend/search_movies.html', {'movies': movies,
-                                                                'movies_similar': movies_similar})
+
+        if movies.exists():
+            # Lấy genre của bộ phim đầu tiên tìm thấy
+            first_movie_genre = movies.first().genre
+            # Khởi tạo ContentBasedRecommender và gợi ý các phim tương tự
+            recommender = ContentBasedRecommender()
+            recommended_movie_ids = recommender.recommend(first_movie_genre, k=18)
+            movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
+            
+            return render(request, 'recommend/search_movies.html', {'movies': movies,
+                                                                    'movies_similar': movies_similar})
 
     return render(request, 'recommend/list.html', {'movies': movies})
 
