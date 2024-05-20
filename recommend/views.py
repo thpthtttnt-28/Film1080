@@ -4,34 +4,66 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .forms import *
 from django.http import Http404
 from .models import Movie, Myrating, MyList
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, Count
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.db.models import Case, When
 import pandas as pd
-from .algo_rcm import get_similar, ContentBasedRecommender
+from .algo_rcm import get_similar, ContentBasedRecommender, CollaborativeFilteringRecommender
 # Create your views here.
 
-def index(request):
-    movies = Movie.objects.all()
-    query = request.GET.get('q')
+def home(request):
+    # Gợi ý phim theo số lượt xem
+    trending_movies = get_trending_movies()
 
-    if query:
-        movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
+    # Kiểm tra xem người dùng đã đăng nhập chưa
+    if request.user.is_authenticated:
+        query = request.GET.get('q')
 
-        if movies.exists():
-            # Lấy genre của bộ phim đầu tiên tìm thấy
-            first_movie_genre = movies.first().genre
-            # Khởi tạo ContentBasedRecommender và gợi ý các phim tương tự
-            recommender = ContentBasedRecommender()
-            recommended_movie_ids = recommender.recommend(first_movie_genre, k=18)
-            movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
-            
-            return render(request, 'recommend/search_movies.html', {'movies': movies,
+        if query:
+            movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
+            if movies.exists():
+                return search_movies(request, movies)
+
+        cfr = CollaborativeFilteringRecommender()
+        # Lấy user_id của user hiện tại, giả sử user_id = 1
+        user_id = request.user.id
+
+        # Lấy thông tin chi tiết của các phim được gợi ý
+        co_movies = cfr.get_cooccurrence_matrix_recommendation(user_id)
+
+        # Gợi ý phim dựa trên thuật toán matrix factorization
+        # mf_movies = cfr.get_matrix_factorization_recommendation(user_id)
+
+        context = {
+            'trending_movies': trending_movies,
+            'co_movies': co_movies,
+            # 'mf_movies': mf_movies,
+        }
+        return render(request, 'recommend/list.html', context)
+
+    # Trả về trang chủ chỉ với danh sách các phim phổ biến
+    context = {
+        'trending_movies': trending_movies,
+    }
+    return render(request, 'recommend/list.html', context)
+
+def get_trending_movies():
+    # Gợi ý phim theo số lượt xem trong bảng MyList
+    trending_movie_ids = MyList.objects.values('movie').annotate(total_watch=Count('movie')).order_by('-total_watch')[:12]
+    trending_movies = Movie.objects.filter(id__in=[movie['movie'] for movie in trending_movie_ids])
+    return trending_movies
+
+def search_movies(request, movies):
+    # Lấy genre của bộ phim đầu tiên tìm thấy
+    first_movie_genre = movies.first().genre
+    # Khởi tạo ContentBasedRecommender và gợi ý các phim tương tự
+    recommender = ContentBasedRecommender()
+    recommended_movie_ids = recommender.recommend(first_movie_genre, k=18)
+    movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
+    
+    return render(request, 'recommend/search_movies.html', {'movies': movies,
                                                                     'movies_similar': movies_similar})
-
-    return render(request, 'recommend/list.html', {'movies': movies})
-
 
 # Show details of the movie
 def detail(request, movie_id):
@@ -95,7 +127,6 @@ def detail(request, movie_id):
     }
 
     return render(request, 'recommend/detail.html', context)
-
 
 # MyList functionality
 def watch(request):

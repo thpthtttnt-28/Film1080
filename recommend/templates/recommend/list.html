@@ -1,54 +1,102 @@
-{% extends 'recommend/base.html'%}
+{% extends 'recommend/base.html' %}
 {% block body %}
 
-{% if not request.user.is_authenticated %}
-    <br>
-{% else %}
-    <center style="color:#fff"><h2>Welcome {{user.username}}!!</h2></center>
-{% endif %}
-
-<div class="container" >
-    <div class="col-xs-6 col-xs-offset-3">
-    	<form class="form-horizontal" role="search" method="get" action=''>
-            <div class="form-group">
-                <div class="input-group">
-                    <input type="text" class="form-control input-lg " name="q" value="{{ request.GET.q }}" placeholder= "Search Movies "/>
-                    <span class='input-group-btn'>
-                        <button class='button1' type='submit'>Search</button>
-                    </span>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-<p style="text-align:left;">
-    <span style="float:right;">
-    <h2>Movie List</h2>
-    </span>
-</p>
-<hr>
-<br>
-
-<!-- Movie list -->
-    <div class="row" >
-            {% if movies %}
-            {% for movie in movies %}
-                <div class="col-sm-2 col-md-2">
-                    <div class="thumbnail" style="border-radius: 22px 22px 22px 22px;">
-                        <center><h5>{{movie.title}}</h5></center>
-                        <a href="{% url 'detail' movie.id %}">
-                            <img src="{{ movie.movie_logo.url}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
-                        </a>
-                        <!-- <h5>{{movie.genre}}</h5> -->
+    <div class="container">
+        <div class="row">
+            <div class="col-xs-6 col-xs-offset-3">
+                <form class="form-horizontal" role="search" method="get" action=''>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input type="text" class="form-control input-lg" name="q" value="{{ request.GET.q }}" placeholder="Tìm kiếm phim" />
+                            <span class='input-group-btn'>
+                                <button class='button1' type='submit'>Tìm kiếm</button>
+                            </span>
+                        </div>
                     </div>
-                </div>
-                {% endfor %}
-                {% endif %}
+                </form>
+            </div>
         </div>
+    </div>
 
-</div>
+{% if not request.user.is_authenticated %}
+    <h2>Xu hướng</h2>
+    <hr>
+    <div class="row">
+        {% for movie in trending_movies %}
+        <div class="col-sm-2 col-md-2">
+            <div class="thumbnail" style="border-radius: 22px;">
+                <center>
+                    <h5>{{ movie.title }}</h5>
+                </center>
+                <a href="{% url 'detail' movie.id %}">
+                    <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px;">
+                </a>
+                <h5>{{ movie.genre }}</h5>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
 
+    <center style="color:#fff">
+        <h2>Welcome {{ user.username }}!!</h2>
+    </center>
+
+
+    <h2>Xu hướng</h2>
+    <hr>
+    <div class="row">
+        {% for movie in trending_movies %}
+        <div class="col-sm-2 col-md-2">
+            <div class="thumbnail" style="border-radius: 22px;">
+                <center>
+                    <h5>{{ movie.title }}</h5>
+                </center>
+                <a href="{% url 'detail' movie.id %}">
+                    <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px;">
+                </a>
+                <h5>{{ movie.genre }}</h5>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <h2>Dựa trên những gì bạn đã xem</h2>
+    <hr>
+    <div class="row">
+        {% for movie in co_movies %}
+        <div class="col-sm-2 col-md-2">
+            <div class="thumbnail" style="border-radius: 22px;">
+                <center>
+                    <h5>{{ movie.title }}</h5>
+                </center>
+                <a href="{% url 'detail' movie.id %}">
+                    <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px;">
+                </a>
+                <h5>{{ movie.genre }}</h5>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2>Có thể phù hợp với bạn</h2>
+    <hr>
+    <div class="row">
+        {% for movie in mf_movies %}
+        <div class="col-sm-2 col-md-2">
+            <div class="thumbnail" style="border-radius: 22px;">
+                <center>
+                    <h5>{{ movie.title }}</h5>
+                </center>
+                <a href="{% url 'detail' movie.id %}">
+                    <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px;">
+                </a>
+                <h5>{{ movie.genre }}</h5>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
 
 {% endblock %}
