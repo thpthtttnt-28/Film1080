@@ -2,3 +2,5 @@
 recommend/algorithm/
 settings.json
 *.pyc
+
+recommend/__pycache__/
