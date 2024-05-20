@@ -4,12 +4,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .forms import *
 from django.http import Http404
 from .models import Movie, Myrating, MyList
-from django.db.models import Q
+from django.db.models import Q, Avg
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.db.models import Case, When
 import pandas as pd
-
+from .algo_rcm import get_similar, ContentBasedRecommender
 # Create your views here.
 
 def index(request):
@@ -18,7 +18,12 @@ def index(request):
 
     if query:
         movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
-        return render(request, 'recommend/list.html', {'movies': movies})
+        # movie with similar genre
+        recommender = ContentBasedRecommender()
+        recommended_movie_ids = recommender.recommend(query, k=5)
+        movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
+        return render(request, 'recommend/search_movies.html', {'movies': movies,
+                                                                'movies_similar': movies_similar})
 
     return render(request, 'recommend/list.html', {'movies': movies})
 
@@ -29,49 +34,36 @@ def detail(request, movie_id):
         return redirect("login")
     if not request.user.is_active:
         raise Http404
-    movies = get_object_or_404(Movie, id=movie_id)
-    movie = Movie.objects.get(id=movie_id)
-    
-    temp = list(MyList.objects.all().values().filter(movie_id=movie_id,user=request.user))
-    if temp:
-        update = temp[0]['watch']
-    else:
-        update = False
-    if request.method == "POST":
 
-        # For my list
+    movie = get_object_or_404(Movie, id=movie_id)
+    
+    temp = list(MyList.objects.filter(movie_id=movie_id, user=request.user).values())
+    update = temp[0]['watch'] if temp else False
+
+    if request.method == "POST":
         if 'watch' in request.POST:
             watch_flag = request.POST['watch']
-            if watch_flag == 'on':
-                update = True
+            update = watch_flag == 'on'
+            if MyList.objects.filter(movie_id=movie_id, user=request.user).exists():
+                MyList.objects.filter(movie_id=movie_id, user=request.user).update(watch=update)
             else:
-                update = False
-            if MyList.objects.all().values().filter(movie_id=movie_id,user=request.user):
-                MyList.objects.all().values().filter(movie_id=movie_id,user=request.user).update(watch=update)
-            else:
-                q=MyList(user=request.user,movie=movie,watch=update)
-                q.save()
-            if update:
-                messages.success(request, "Movie added to your list!")
-            else:
-                messages.success(request, "Movie removed from your list!")
-
-            
-        # For rating
-        else:
+                MyList(user=request.user, movie=movie, watch=update).save()
+            messages.success(request, "Movie added to your list!" if update else "Movie removed from your list!")
+        elif 'rating' in request.POST:
             rate = request.POST['rating']
-            if Myrating.objects.all().values().filter(movie_id=movie_id,user=request.user):
-                Myrating.objects.all().values().filter(movie_id=movie_id,user=request.user).update(rating=rate)
+            if Myrating.objects.filter(movie_id=movie_id, user=request.user).exists():
+                Myrating.objects.filter(movie_id=movie_id, user=request.user).update(rating=rate)
             else:
-                q=Myrating(user=request.user,movie=movie,rating=rate)
-                q.save()
-
+                Myrating(user=request.user, movie=movie, rating=rate).save()
             messages.success(request, "Rating has been submitted!")
+        elif 'comment' in request.POST:
+            comment_text = request.POST['comment']
+            Comment(user=request.user, movie=movie, text=comment_text).save()
+            messages.success(request, "Comment has been submitted!")
 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
-    out = list(Myrating.objects.filter(user=request.user.id).values())
 
-    # To display ratings in the movie detail page
+    out = list(Myrating.objects.filter(user=request.user.id).values())
     movie_rating = 0
     rate_flag = False
     for each in out:
@@ -80,7 +72,23 @@ def detail(request, movie_id):
             rate_flag = True
             break
 
-    context = {'movies': movies,'movie_rating':movie_rating,'rate_flag':rate_flag,'update':update}
+    comments = Comment.objects.filter(movie=movie).order_by('-created_at')
+
+        # Tính toán rating trung bình
+    avg_rating = Myrating.objects.filter(movie_id=movie_id).aggregate(Avg('rating'))['rating__avg']
+    
+    # Nếu không có rating, gán giá trị mặc định là 0
+    movie_avg_rating = avg_rating if avg_rating else 0
+
+    context = {
+        'movie': movie,
+        'movie_rating': movie_rating,
+        'rate_flag': rate_flag,
+        'update': update,
+        'comments': comments,
+        'movie_avg_rating': movie_avg_rating,
+    }
+
     return render(request, 'recommend/detail.html', context)
 
 
@@ -102,15 +110,8 @@ def watch(request):
     return render(request, 'recommend/watch.html', {'movies': movies})
 
 
-# To get similar movies based on user rating
-def get_similar(movie_name,rating,corrMatrix):
-    similar_ratings = corrMatrix[movie_name]*(rating-2.5)
-    similar_ratings = similar_ratings.sort_values(ascending=False)
-    return similar_ratings
-
 # Recommendation Algorithm
 def recommend(request):
-
     if not request.user.is_authenticated:
         return redirect("login")
     if not request.user.is_active:
