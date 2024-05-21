@@ -188,24 +188,16 @@ def recommend(request):
 
 # Register user
 def signUp(request):
-    form = UserForm(request.POST or None)
-
-    if form.is_valid():
-        user = form.save(commit=False)
-        username = form.cleaned_data['username']
-        password = form.cleaned_data['password']
-        user.set_password(password)
-        user.save()
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            if user.is_active:
-                login(request, user)
-                return redirect("index")
-
-    context = {'form': form}
-
-    return render(request, 'recommend/signUp.html', context)
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Đăng nhập người dùng với backend mặc định của Django
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+            return redirect('profile')  # Điều hướng đến trang profile sau khi đăng ký thành công
+    else:
+        form = SignUpForm()
+    return render(request, 'recommend/signUp.html', {'form': form})
 
 
 # Login User
@@ -218,9 +210,10 @@ def Login(request):
         if user is not None:
             if user.is_active:
                 login(request, user)
+                # Chuyển hướng đến trang chính sau khi đăng nhập thành công
                 return redirect("index")
             else:
-                return render(request, 'recommend/login.html', {'error_message': 'Your account disable'})
+                return render(request, 'recommend/login.html', {'error_message': 'Your account is disabled'})
         else:
             return render(request, 'recommend/login.html', {'error_message': 'Invalid Login'})
 
