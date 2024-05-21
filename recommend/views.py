@@ -10,7 +10,41 @@ from django.http import HttpResponseRedirect
 from django.db.models import Case, When
 import pandas as pd
 from .algo_rcm import get_similar, ContentBasedRecommender, CollaborativeFilteringRecommender
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Q, Case, When
+from django.contrib import messages
+from django.http import HttpResponseRedirect, Http404
+import pandas as pd
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render, get_object_or_404, redirect
+from .forms import SignUpForm, UserProfileForm
+from .models import Movie, Myrating, MyList, UserProfile
+from django.db.models import Q, Case, When
+from django.contrib import messages
+from django.http import HttpResponseRedirect, Http404
+import pandas as pd
+from django.contrib.auth.decorators import login_required
+from social_django.utils import load_strategy, load_backend
+from social_core.backends.google import GoogleOAuth2
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import authenticate, login as auth_login
+from django.http import HttpResponseForbidden
+from datetime import datetime, timedelta
+from django.utils import timezone
+from .models import Movie, Myrating, MyList, UserProfile,Comment
 # Create your views here.
+def index(request):
+    movies = Movie.objects.all()
+    query = request.GET.get('q')
+
+    if query:
+        movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
+        return render(request, 'recommend/list.html', {'movies': movies})
+
+    return render(request, 'recommend/list.html', {'movies': movies})
 
 def home(request):
     # Gợi ý phim theo số lượt xem
@@ -129,61 +163,66 @@ def detail(request, movie_id):
     return render(request, 'recommend/detail.html', context)
 
 # MyList functionality
+@login_required
 def watch(request):
+    try:
+        user_profile = request.user.userprofile
+    except UserProfile.DoesNotExist:
+        # Create UserProfile if it does not exist
+        user_profile = UserProfile.objects.create(user=request.user)
+    
+    if user_profile.is_vip:
+        movies = Movie.objects.filter(mylist__watch=True, mylist__user=request.user)
+    else:
+        movies = Movie.objects.filter(mylist__watch=True, mylist__user=request.user, is_vip=False)
 
-    if not request.user.is_authenticated:
-        return redirect("login")
-    if not request.user.is_active:
-        raise Http404
-
-    movies = Movie.objects.filter(mylist__watch=True,mylist__user=request.user)
     query = request.GET.get('q')
 
     if query:
-        movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
-        return render(request, 'recommend/watch.html', {'movies': movies})
+        movies = movies.filter(Q(title__icontains=query)).distinct()
 
     return render(request, 'recommend/watch.html', {'movies': movies})
-
+def get_similar(movie_name, rating, corrMatrix):
+    similar_ratings = corrMatrix[movie_name] * (rating - 2.5)
+    similar_ratings = similar_ratings.sort_values(ascending=False)
+    return similar_ratings
 
 # Recommendation Algorithm
+@login_required
 def recommend(request):
-    if not request.user.is_authenticated:
-        return redirect("login")
-    if not request.user.is_active:
-        raise Http404
+    if request.user.userprofile.is_vip:
+        movie_rating = pd.DataFrame(list(Myrating.objects.all().values()))
 
+        new_user = movie_rating.user_id.unique().shape[0]
+        current_user_id = request.user.id
+        # Kiểm tra nếu người dùng mới không đánh giá bất kỳ bộ phim nào
+        if current_user_id > new_user:
+            movie = Movie.objects.get(id=19)  # ID của bộ phim mặc định
+            q = Myrating(user=request.user, movie=movie, rating=0)
+            q.save()
 
-    movie_rating=pd.DataFrame(list(Myrating.objects.all().values()))
+        userRatings = movie_rating.pivot_table(index=['user_id'], columns=['movie_id'], values='rating')
+        userRatings = userRatings.fillna(0, axis=1)
+        corrMatrix = userRatings.corr(method='pearson')
 
-    new_user=movie_rating.user_id.unique().shape[0]
-    current_user_id= request.user.id
-	# if new user not rated any movie
-    if current_user_id>new_user:
-        movie=Movie.objects.get(id=19)
-        q=Myrating(user=request.user,movie=movie,rating=0)
-        q.save()
+        user = pd.DataFrame(list(Myrating.objects.filter(user=request.user).values())).drop(['user_id', 'id'], axis=1)
+        user_filtered = [tuple(x) for x in user.values]
+        movie_id_watched = [each[0] for each in user_filtered]
 
+        similar_movies = pd.DataFrame()
+        for movie, rating in user_filtered:
+            similar_movies = pd.concat([similar_movies, get_similar(movie, rating, corrMatrix)], axis=1)
 
-    userRatings = movie_rating.pivot_table(index=['user_id'],columns=['movie_id'],values='rating')
-    userRatings = userRatings.fillna(0,axis=1)
-    corrMatrix = userRatings.corr(method='pearson')
+        similar_movies = similar_movies.sum(axis=1).sort_values(ascending=False)
+        movies_id_recommend = [each for each in similar_movies.index if each not in movie_id_watched]
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(movies_id_recommend)])
+        movie_list = list(Movie.objects.filter(id__in=movies_id_recommend).order_by(preserved)[:10])
 
-    user = pd.DataFrame(list(Myrating.objects.filter(user=request.user).values())).drop(['user_id','id'],axis=1)
-    user_filtered = [tuple(x) for x in user.values]
-    movie_id_watched = [each[0] for each in user_filtered]
-
-    similar_movies = pd.DataFrame()
-    for movie,rating in user_filtered:
-        similar_movies = similar_movies.append(get_similar(movie,rating,corrMatrix),ignore_index = True)
-
-    movies_id = list(similar_movies.sum().sort_values(ascending=False).index)
-    movies_id_recommend = [each for each in movies_id if each not in movie_id_watched]
-    preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(movies_id_recommend)])
-    movie_list=list(Movie.objects.filter(id__in = movies_id_recommend).order_by(preserved)[:10])
-
-    context = {'movie_list': movie_list}
-    return render(request, 'recommend/recommend.html', context)
+        context = {'movie_list': movie_list}
+        return render(request, 'recommend/recommend.html', context)
+    else:
+        messages.error(request, "Only VIP users can access recommendations.")
+        return redirect('profile')
 
 
 # Register user
@@ -225,10 +264,60 @@ def Logout(request):
     logout(request)
     return redirect("login")
 
+# Profile view
+@login_required
+def profile(request):
+    user = request.user
+    user_profile = None
+    user_full_name = None
 
-def info(request):
-    context = {
-        'hello': 'Hello World!',
-    }
-    return render(request, 'recommend/info.html', context)
+    # Kiểm tra xem UserProfile có tồn tại không
+    if hasattr(user, 'userprofile'):
+        user_profile = user.userprofile
+
+    # Lấy tên đầy đủ của người dùng
+    user_full_name = user.get_full_name()
+
+    return render(request, 'recommend/profile.html', {'user_profile': user_profile, 'user_full_name': user_full_name})
+
+# Profile edit view
+@login_required
+def profile_edit(request):
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=user_profile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile')
+    else:
+        form = UserProfileForm(instance=user_profile)
+    return render(request, 'recommend/profile_edit.html', {'form': form})
+
+@login_required
+def upgrade_vip(request):
+    if request.method == 'POST':
+        vip_duration = int(request.POST.get('vip_duration'))
+        user_profile = request.user.userprofile
+        
+        # Cập nhật trạng thái VIP của người dùng
+        user_profile.is_vip = True
+        
+        # Xác định thời gian hết hạn của gói VIP dựa trên loại gói
+        if vip_duration == 1:
+            expire_date = datetime.now() + timedelta(days=30)
+        elif vip_duration == 6:
+            expire_date = datetime.now() + timedelta(days=180)
+        elif vip_duration == 12:
+            expire_date = datetime.now() + timedelta(days=365)
+        
+        # Lưu lại thời gian hết hạn vào cơ sở dữ liệu
+        user_profile.vip_expire_date = expire_date
+        user_profile.save()
+        
+        return redirect('profile')
+    
+    return render(request, 'recommend/upgrade_vip.html')
+
+
+
 

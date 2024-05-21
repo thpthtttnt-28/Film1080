@@ -10,6 +10,9 @@ urlpatterns = [
     path('<int:movie_id>/', views.detail, name='detail'),
     path('watch/', views.watch, name='watch'),
     path('recommend/', views.recommend, name='recommend'),
-    path('info/', views.info, name='info'),
     path('oauth/', include('social_django.urls', namespace='social')),  # Thêm dòng này để sử dụng URL của social_django
+    path('profile/', views.profile, name='profile'),  # Trang hồ sơ người dùng
+    path('profile/edit/', views.profile_edit, name='profile_edit'),  # Trang chỉnh sửa hồ sơ
+    path('oauth/', include('social_django.urls', namespace='social')),  # Thêm dòng này để sử dụng URL của social_django
+    path('upgrade_vip/', views.upgrade_vip, name='upgrade_vip'),
 ]
