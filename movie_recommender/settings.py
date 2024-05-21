@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 # from movie_recommender.aws.conf import *
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -36,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'recommend',
-    'recommend.templatetags',
+    'social_django',  # Thêm ứng dụng social_django
 ]
 
 MIDDLEWARE = [
@@ -63,6 +64,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',  # Thêm dòng này
+                'social_django.context_processors.login_redirect',  # Thêm dòng này
             ],
         },
     },
@@ -128,3 +131,16 @@ STATICFILES_DIRS = ([
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
+# Social Auth Configuration
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.google.GoogleOAuth2',  # Thêm dòng này
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# Thêm các khóa Google OAuth2 của bạn
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '148694489902-hl29j1d5gimuia7aciiluat7pf264tkd.apps.googleusercontent.com'  # Thay thế <your-client-id> bằng Client ID thực tế của bạn
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'  # Thay thế <your-client-secret> bằng Client Secret thực tế của bạn
+
+# URL để chuyển hướng sau khi đăng nhập
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
