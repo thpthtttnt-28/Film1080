@@ -74,6 +74,29 @@
                 <ul class="nav navbar-nav">
                     <li><a style="color:#4CAF50" href="/">Awesome-Movie-Recommender</a></li>
                     <li><a href="{% url 'index' %}">Home</a></li>
+                    <!-- Khung filter nằm trong navbar -->
+                    <li>
+                        <form action="{% url 'filter_movies' %}" method="get" class="navbar-form navbar-left">
+                            <div class="form-group">
+                                <label for="genre">Filter by Genre:</label>
+                                <select class="form-control" id="genre" name="genre">
+                                    <option value="">All Genres</option>
+                                    <option value="Action">Action</option>
+                                    <option value="Comedy">Comedy</option>
+                                    <option value="Drama">Drama</option>
+                                    <option value="Romance">Romance</option>
+                                    <option value="Thriller">Thriller</option>
+                                    <option value="Animation">Animation</option>
+                                    <option value="Adventure">Adventure</option>
+                                    <option value="Fantasy">Fantasy</option>
+                                    <option value="Sci-Fi">Sci-Fi</option>
+                                    <option value="Mystery">Mystery</option>
+                                    <!-- Thêm các thể loại khác vào đây -->
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Apply Filter</button>
+                        </form>
+                    </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     <!-- Liên kết My List chỉ hiển thị khi người dùng đã đăng nhập -->
@@ -92,6 +115,7 @@
             </div>
         </div>
     </nav>
+    
 
     {% block body %}
     {% endblock %}

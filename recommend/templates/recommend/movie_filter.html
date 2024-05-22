@@ -1,0 +1,32 @@
+<!-- recommend/filtered_movies.html -->
+{% extends 'recommend/base.html' %}
+{% block title %}Filtered Movies{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h1>Filtered Movies</h1>
+    <hr>
+    <div class="row">
+        {% if movies %}
+            {% for movie in movies %}
+                <div class="col-sm-3">
+                    <div class="card">
+                        <img class="card-img-top" src="{{ movie.movie_logo.url }}" alt="{{ movie.title }}">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ movie.title }}</h5>
+                            <p class="card-text">{{ movie.genre }}</p>
+                            <a href="{% url 'detail' movie.id %}" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col">
+                <div class="alert alert-danger" role="alert">
+                    <strong>Sorry!</strong> No movies found matching the filter criteria.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
