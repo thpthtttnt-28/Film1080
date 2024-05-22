@@ -6,7 +6,7 @@
     <ul class="messages">
         {% for message in messages %}
             <div class="alert alert-success">
-              <strong>Success!</strong> {{ message }}
+                <strong>Success!</strong> {{ message }}
             </div>
         {% endfor %}
     </ul>
@@ -22,12 +22,8 @@
             <div class="star-rating">
                 {% load custom_filters %}
                 <span>Average Rating:</span>
-                <!-- {% for i in 5|custom_range %}
-                    <span class="fa fa-star-o"></span>
-                {% endfor %} -->
                 <span>({{ movie_avg_rating|floatformat:2 }})</span>
             </div>
-            
         </div>
         <!-- Right Movie Info -->
         <div class="col-sm-offset-1 col-sm-4 col-md-4">
@@ -35,6 +31,7 @@
             <h3><small>Genre: {{ movie.genre }}</small></h3>
 
             <div class="col-sm-offset-0 col-sm-8">
+                <!-- Rating Form -->
                 <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}" onsubmit="return validateForm()" name="ratingForm">
                     {% csrf_token %}
                     <div class="form-group">
@@ -62,6 +59,7 @@
                     </div>
                 </form>
 
+                <!-- Watch List Form -->
                 <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}">
                     {% csrf_token %}
                     <div class="form-group">
@@ -96,10 +94,23 @@
 
                 <div class="comments">
                     {% for comment in comments %}
-                        <div class="comment">
-                            <strong>{{ comment.user.username }}</strong>:
-                            <p>{{ comment.text }}</p>
-                            <small>{{ comment.created_at }}</small>
+                        <div class="comment" style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <strong>{{ comment.user.username }}</strong>:
+                                <p>{{ comment.text }}</p>
+                                <small>{{ comment.created_at }}</small>
+                            </div>
+                            <button class="btn btn-danger" onclick="showReportForm({{ comment.id }})">Report</button>
+                        </div>
+                        <div id="report-form-{{ comment.id }}" style="display: none; margin-top: 10px;">
+                            <form method="post" action="{% url 'detail' movie.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                                <div class="form-group">
+                                    <textarea name="reason" class="form-control" rows="2" placeholder="Reason for reporting..."></textarea>
+                                </div>
+                                <input type="submit" name="report" class="btn btn-danger" value="Submit Report">
+                            </form>
                         </div>
                     {% endfor %}
                 </div>
@@ -107,4 +118,16 @@
         </div>
     </div>
 </div>
+
+<script>
+function showReportForm(commentId) {
+    var form = document.getElementById('report-form-' + commentId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+
 {% endblock %}
