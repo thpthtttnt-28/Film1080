@@ -61,3 +61,12 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
             instance.userprofile.save()
         except UserProfile.DoesNotExist:
             UserProfile.objects.create(user=instance)
+
+class Report(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    comment = models.ForeignKey('Comment', on_delete=models.CASCADE)
+    reason = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Report by {self.user.username} on {self.comment.id}'

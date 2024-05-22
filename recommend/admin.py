@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Movie, Myrating, MyList, UserProfile,Comment
+from .models import Movie, Myrating, MyList, UserProfile,Comment, Report
 
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'name', 'address', 'phone_number', 'is_vip')
@@ -11,3 +11,4 @@ admin.site.register(Myrating)
 admin.site.register(MyList)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(Comment)
+admin.site.register(Report)

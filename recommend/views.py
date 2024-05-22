@@ -35,6 +35,8 @@ from django.http import HttpResponseForbidden
 from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Movie, Myrating, MyList, UserProfile,Comment
+from .models import Report
+
 # Create your views here.
 def index(request):
     movies = Movie.objects.all()
@@ -131,6 +133,12 @@ def detail(request, movie_id):
             comment_text = request.POST['comment']
             Comment(user=request.user, movie=movie, text=comment_text).save()
             messages.success(request, "Comment has been submitted!")
+        elif 'report' in request.POST:
+            comment_id = request.POST['comment_id']
+            reason = request.POST['reason']
+            comment = get_object_or_404(Comment, id=comment_id)
+            Report(user=request.user, comment=comment, reason=reason).save()
+            messages.success(request, "Report has been submitted!")
 
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
@@ -145,7 +153,7 @@ def detail(request, movie_id):
 
     comments = Comment.objects.filter(movie=movie).order_by('-created_at')
 
-        # Tính toán rating trung bình
+    # Tính toán rating trung bình
     avg_rating = Myrating.objects.filter(movie_id=movie_id).aggregate(Avg('rating'))['rating__avg']
     
     # Nếu không có rating, gán giá trị mặc định là 0
