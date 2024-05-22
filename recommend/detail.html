@@ -1,0 +1,133 @@
+{% extends 'recommend/base.html'%}
+{% block title %}{{ movie.title }}{% endblock %}
+
+{% block body %}
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <div class="alert alert-success">
+                <strong>Success!</strong> {{ message }}
+            </div>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<div class="container-fluid col-sm-offset-1">
+    <div class="row">
+        <!-- Left Movie Info -->
+        <div class="col-sm-2 col-md-3">
+            <a href="#">
+                <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
+            </a>
+            <div class="star-rating">
+                {% load custom_filters %}
+                <span>Average Rating:</span>
+                <span>({{ movie_avg_rating|floatformat:2 }})</span>
+            </div>
+        </div>
+        <!-- Right Movie Info -->
+        <div class="col-sm-offset-1 col-sm-4 col-md-4">
+            <h1 style="color:#fff">{{ movie.title }}</h1>
+            <h3><small>Genre: {{ movie.genre }}</small></h3>
+
+            <div class="col-sm-offset-0 col-sm-8">
+                <!-- Rating Form -->
+                <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}" onsubmit="return validateForm()" name="ratingForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="row">
+                                <div class="col-lg-14">
+                                    <div class="star-rating">
+                                        <span>Rate Movie</span>
+                                        <span class="fa fa-star-o" data-rating="1"></span>
+                                        <span class="fa fa-star-o" data-rating="2"></span>
+                                        <span class="fa fa-star-o" data-rating="3"></span>
+                                        <span class="fa fa-star-o" data-rating="4"></span>
+                                        <span class="fa fa-star-o" data-rating="5"></span>
+                                        
+                                        {% if rate_flag %}
+                                            <input type="hidden" name="rating" class="rating-value" value="{{ movie_rating }}">
+                                        {% else %}
+                                            <input type="hidden" name="rating" class="rating-value" value="0">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="submit" class="button" value="Submit">
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Watch List Form -->
+                <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <div class="input-group">
+                            <div class="row">
+                                <div class="col-lg-14">
+                                    <div class="star-rating">
+                                        <span>Add to my list</span>
+                                        {% if update %}
+                                            <input type="checkbox" name="watch" checked>
+                                            <input type="submit" class="button" value="Remove" name="watch">
+                                        {% else %}
+                                            <input type="checkbox" name="watch">
+                                            <input type="submit" class="button" value="Add">
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Comment Section -->
+                <h3>Comments</h3>
+                <form method="post" action="{% url 'detail' movie.id %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <textarea name="comment" class="form-control" rows="3" placeholder="Add a comment..."></textarea>
+                    </div>
+                    <input type="submit" class="btn btn-primary" value="Submit">
+                </form>
+
+                <div class="comments">
+                    {% for comment in comments %}
+                    <div class="comment" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <strong><a href="{% url 'user_list' username=comment.user.username %}">{{ comment.user.username }}</a></strong>:
+                            <p>{{ comment.text }}</p>
+                            <small>{{ comment.created_at }}</small>
+                        </div>
+                        <button class="btn btn-danger" onclick="showReportForm({{ comment.id }})">Report</button>
+                    </div>
+                    <div id="report-form-{{ comment.id }}" style="display: none; margin-top: 10px;">
+                        <form method="post" action="{% url 'detail' movie.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                            <div class="form-group">
+                                <textarea name="reason" class="form-control" rows="2" placeholder="Reason for reporting..."></textarea>
+                            </div>
+                            <input type="submit" name="report" class="btn btn-danger" value="Submit Report">
+                        </form>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showReportForm(commentId) {
+    var form = document.getElementById('report-form-' + commentId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+
+{% endblock %}
