@@ -1,6 +1,7 @@
 from django.urls import path
 from django.urls import path, include  
 from . import views
+from .views import filter_movies
 
 urlpatterns = [
     path('', views.home, name='index'),
@@ -16,4 +17,5 @@ urlpatterns = [
     path('oauth/', include('social_django.urls', namespace='social')),  # Thêm dòng này để sử dụng URL của social_django
     path('upgrade_vip/', views.upgrade_vip, name='upgrade_vip'),
     path('user/<str:username>/', views.user_list, name='user_list'),
+    path('filter/', filter_movies, name='filter_movies'),
 ]

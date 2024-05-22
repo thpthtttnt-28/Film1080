@@ -36,6 +36,7 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from .models import Movie, Myrating, MyList, UserProfile,Comment
 from .models import Report
+from .models import Movie
 
 # Create your views here.
 def index(request):
@@ -51,6 +52,9 @@ def index(request):
 def home(request):
     # Gợi ý phim theo số lượt xem
     trending_movies = get_trending_movies()
+
+    # Lấy thể loại phim từ yêu cầu GET
+    genre = request.GET.get('genre')
 
     # Kiểm tra xem người dùng đã đăng nhập chưa
     if request.user.is_authenticated:
@@ -68,17 +72,21 @@ def home(request):
         # Lấy thông tin chi tiết của các phim được gợi ý
         co_movies = cfr.get_cooccurrence_matrix_recommendation(user_id)
 
-        # Gợi ý phim dựa trên thuật toán matrix factorization
-        # mf_movies = cfr.get_matrix_factorization_recommendation(user_id)
+        # Lọc phim theo thể loại nếu có
+        if genre:
+            co_movies = co_movies.filter(genre=genre)
 
         context = {
             'trending_movies': trending_movies,
             'co_movies': co_movies,
-            # 'mf_movies': mf_movies,
         }
         return render(request, 'recommend/list.html', context)
 
-    # Trả về trang chủ chỉ với danh sách các phim phổ biến
+    # Lọc phim theo thể loại nếu có
+    if genre:
+        trending_movies = trending_movies.filter(genre=genre)
+
+    # Trả về trang chủ chỉ với danh sách các phim phổ biến hoặc danh sách phim theo thể loại
     context = {
         'trending_movies': trending_movies,
     }
@@ -330,6 +338,28 @@ def user_list(request, username):
     user = get_object_or_404(User, username=username)
     movies = MyList.objects.filter(user=user).select_related('movie')
     return render(request, 'recommend/user_list.html', {'user': user, 'movies': movies})
+
+def filter_movies(request):
+    genre = request.GET.get('genre')
+
+    if genre:
+        # Tách các thể loại được nhập vào từ query string
+        genres = [g.strip() for g in genre.split(',')]
+        
+        # Tạo một danh sách các Q object cho mỗi thể loại
+        q_objects = [Q(genre__icontains=g) for g in genres]
+
+        # Kết hợp các Q object lại với nhau bằng toán tử OR
+        # Điều này có nghĩa là bất kỳ bộ phim nào có ít nhất một trong các thể loại được chọn sẽ được lọc ra
+        movies = Movie.objects.filter(*q_objects).distinct()
+    else:
+        # Nếu không có thể loại nào được chọn, trả về tất cả các bộ phim
+        movies = Movie.objects.all()
+
+    context = {
+        'movies': movies,
+    }
+    return render(request, 'recommend/movie_filter.html', context)
 
 
 
