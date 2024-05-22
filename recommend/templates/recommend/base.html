@@ -133,7 +133,25 @@
             </div>
         </footer>
     </nav>
+    <!-- Thêm SDK JavaScript của Facebook -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+    <script>
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId      : '470908998713545', // Sử dụng App ID của bạn
+                xfbml      : true,
+                version    : 'v14.0'
+            });
+        };
 
+        (function(d, s, id){
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) {return;}
+            js = d.createElement(s); js.id = id;
+            js.src = "https://connect.facebook.net/en_US/sdk.js";
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'facebook-jssdk'));
+    </script>
     <script type="text/javascript" src="{% static 'recommend/js/jquery.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'recommend/js/bootstrap.min.js' %}"></script>
     <script type="text/javascript">

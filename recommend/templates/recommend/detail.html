@@ -1,4 +1,5 @@
-{% extends 'recommend/base.html'%}
+{% extends 'recommend/base.html' %}
+{% load static %}
 {% block title %}{{ movie.title }}{% endblock %}
 
 {% block body %}
@@ -24,7 +25,19 @@
                 <span>Average Rating:</span>
                 <span>({{ movie_avg_rating|floatformat:2 }})</span>
             </div>
+            <!-- Share Button -->
+            <div class="share-button">
+                <a href="#" onclick="shareOnFacebook('{{ request.build_absolute_uri }}')">
+                    <img src="{% static 'recommend/images/facebook-icon.png' %}" alt="Share on Facebook" style="width: 40px; height: 40px;">
+                </a>
+                <a href="#" onclick="shareOnTwitter('{{ movie.title }}', '{{ request.build_absolute_uri }}')">
+                    <img src="{% static 'recommend/images/twitter-icon.png' %}" alt="Share on Twitter" style="width: 40px; height: 40px;">
+                </a>
+            </div>
+
         </div>
+        
+        
         <!-- Right Movie Info -->
         <div class="col-sm-offset-1 col-sm-4 col-md-4">
             <h1 style="color:#fff">{{ movie.title }}</h1>
@@ -128,6 +141,18 @@ function showReportForm(commentId) {
         form.style.display = 'none';
     }
 }
-</script>
 
+function shareOnFacebook(url) {
+    FB.ui({
+        method: 'share',
+        href: url,
+    }, function(response){});
+}
+</script>
+<script>
+    function shareOnTwitter(title, url) {
+        var twitterUrl = "https://twitter.com/intent/tweet?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(title);
+        window.open(twitterUrl, '_blank');
+    }
+    </script>
 {% endblock %}
