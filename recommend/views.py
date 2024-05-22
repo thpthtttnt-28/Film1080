@@ -326,6 +326,11 @@ def upgrade_vip(request):
     
     return render(request, 'recommend/upgrade_vip.html')
 
+def user_list(request, username):
+    user = get_object_or_404(User, username=username)
+    movies = MyList.objects.filter(user=user).select_related('movie')
+    return render(request, 'recommend/user_list.html', {'user': user, 'movies': movies})
+
 
 
 

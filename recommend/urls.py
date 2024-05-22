@@ -15,4 +15,5 @@ urlpatterns = [
     path('profile/edit/', views.profile_edit, name='profile_edit'),  # Trang chỉnh sửa hồ sơ
     path('oauth/', include('social_django.urls', namespace='social')),  # Thêm dòng này để sử dụng URL của social_django
     path('upgrade_vip/', views.upgrade_vip, name='upgrade_vip'),
+    path('user/<str:username>/', views.user_list, name='user_list'),
 ]
