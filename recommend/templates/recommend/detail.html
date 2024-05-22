@@ -94,24 +94,24 @@
 
                 <div class="comments">
                     {% for comment in comments %}
-                        <div class="comment" style="display: flex; align-items: center; justify-content: space-between;">
-                            <div>
-                                <strong>{{ comment.user.username }}</strong>:
-                                <p>{{ comment.text }}</p>
-                                <small>{{ comment.created_at }}</small>
+                    <div class="comment" style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <strong><a href="{% url 'user_list' username=comment.user.username %}">{{ comment.user.username }}</a></strong>:
+                            <p>{{ comment.text }}</p>
+                            <small>{{ comment.created_at }}</small>
+                        </div>
+                        <button class="btn btn-danger" onclick="showReportForm({{ comment.id }})">Report</button>
+                    </div>
+                    <div id="report-form-{{ comment.id }}" style="display: none; margin-top: 10px;">
+                        <form method="post" action="{% url 'detail' movie.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                            <div class="form-group">
+                                <textarea name="reason" class="form-control" rows="2" placeholder="Reason for reporting..."></textarea>
                             </div>
-                            <button class="btn btn-danger" onclick="showReportForm({{ comment.id }})">Report</button>
-                        </div>
-                        <div id="report-form-{{ comment.id }}" style="display: none; margin-top: 10px;">
-                            <form method="post" action="{% url 'detail' movie.id %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="comment_id" value="{{ comment.id }}">
-                                <div class="form-group">
-                                    <textarea name="reason" class="form-control" rows="2" placeholder="Reason for reporting..."></textarea>
-                                </div>
-                                <input type="submit" name="report" class="btn btn-danger" value="Submit Report">
-                            </form>
-                        </div>
+                            <input type="submit" name="report" class="btn btn-danger" value="Submit Report">
+                        </form>
+                    </div>
                     {% endfor %}
                 </div>
             </div>
