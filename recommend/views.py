@@ -118,6 +118,11 @@ def detail(request, movie_id):
 
     movie = get_object_or_404(Movie, id=movie_id)
     
+    # Kiểm tra xem người dùng có phải là thành viên VIP hay không
+    if not request.user.userprofile.is_vip and movie.is_vip:
+        return HttpResponseForbidden("Only VIP members can access this movie.")
+    
+    # Code tiếp tục như bình thường
     temp = list(MyList.objects.filter(movie_id=movie_id, user=request.user).values())
     update = temp[0]['watch'] if temp else False
 
