@@ -17,23 +17,30 @@ from django.db.models.signals import post_save
 
 class Movie(models.Model):
     title = models.CharField(max_length=200)
-    genre = models.CharField(max_length=100)
+    overview = models.TextField()
     movie_logo = models.FileField()
+    genre = models.CharField(max_length=200)
+    year = models.IntegerField()
     is_vip = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
-
 
 class Myrating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     rating = models.IntegerField(default=0, validators=[MaxValueValidator(5), MinValueValidator(0)])
 
+    def __str__(self):
+        return f'{self.user} rated {self.movie} {self.rating}'
+
 class MyList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
     watch = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.user} added {self.movie} to list'
 
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -43,6 +50,7 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.user} on {self.movie}'
+    
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     name = models.CharField(max_length=100, blank=True, null=True)
@@ -52,6 +60,7 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+    
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:

@@ -33,7 +33,7 @@
                 <div class="thumbnail" style="border-radius: 22px 22px 22px 22px;">
                     <center><h5>{{movie.title}}</h5></center>
                     <a href="{% url 'detail' movie.id %}">
-                        <img src="{{ movie.movie_logo.url}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
+                        <img src="{{ movie.movie_logo}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
                     </a>
                     <!-- <h5>{{movie.genre}}</h5> -->
                 </div>
@@ -57,7 +57,7 @@
                 <div class="thumbnail" style="border-radius: 22px 22px 22px 22px;">
                     <center><h5>{{movie.title}}</h5></center>
                     <a href="{% url 'detail' movie.id %}">
-                        <img src="{{ movie.movie_logo.url}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
+                        <img src="{{ movie.movie_logo}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
                     </a>
                     <!-- <h5>{{movie.genre}}</h5> -->
                 </div>

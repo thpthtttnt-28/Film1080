@@ -1,67 +1,47 @@
 {% extends 'recommend/base.html' %}
 {% block body %}
 
-    <div class="container">
-        <div class="row">
-            <div class="col-xs-6 col-xs-offset-3">
-                <form class="form-horizontal" role="search" method="get" action=''>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <input type="text" class="form-control input-lg" name="q" value="{{ request.GET.q }}" placeholder="Tìm kiếm phim" />
-                            <span class='input-group-btn'>
-                                <button class='button1' type='submit'>Tìm kiếm</button>
-                            </span>
-                        </div>
+<div class="container">
+    <div class="row">
+        <div class="col-xs-6 col-xs-offset-3">
+            <form class="form-horizontal" role="search" method="get" action=''>
+                <div class="form-group">
+                    <div class="input-group">
+                        <input type="text" class="form-control input-lg" name="q" value="{{ request.GET.q }}" placeholder="Tìm kiếm phim" />
+                        <span class='input-group-btn'>
+                            <button class='button1' type='submit'>Tìm kiếm</button>
+                        </span>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-{% if not request.user.is_authenticated %}
-    <h2>Xu hướng</h2>
-    <hr>
-    <div class="row">
-        {% for movie in trending_movies %}
-        <div class="col-sm-2 col-md-2">
-            <div class="thumbnail" style="border-radius: 22px;">
-                <center>
-                    <h5>{{ movie.title }}</h5>
-                </center>
-                <a href="{% url 'detail' movie.id %}">
-                    <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px;">
-                </a>
-                <h5>{{ movie.genre }}</h5>
-            </div>
+<center style="color:#fff">
+    <h2>Welcome {{ user.username }}!!</h2>
+</center>
+
+
+<h2>Xu hướng</h2>
+<hr>
+<div class="row">
+    {% for movie in trending_movies %}
+    <div class="col-sm-2 col-md-2">
+        <div class="thumbnail" style="border-radius: 22px;">
+            <center>
+                <h5>{{ movie.title }}</h5>
+            </center>
+            <a href="{% url 'detail' movie.id %}">
+                <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px;">
+            </a>
+            <h5>{{ movie.genre }}</h5>
         </div>
-        {% endfor %}
     </div>
-{% else %}
+    {% endfor %}
+</div>
 
-    <center style="color:#fff">
-        <h2>Welcome {{ user.username }}!!</h2>
-    </center>
-
-
-    <h2>Xu hướng</h2>
-    <hr>
-    <div class="row">
-        {% for movie in trending_movies %}
-        <div class="col-sm-2 col-md-2">
-            <div class="thumbnail" style="border-radius: 22px;">
-                <center>
-                    <h5>{{ movie.title }}</h5>
-                </center>
-                <a href="{% url 'detail' movie.id %}">
-                    <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px;">
-                </a>
-                <h5>{{ movie.genre }}</h5>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-
-
+{% if user.is_authenticated %}
     <h2>Dựa trên những gì bạn đã xem</h2>
     <hr>
     <div class="row">
@@ -72,7 +52,7 @@
                     <h5>{{ movie.title }}</h5>
                 </center>
                 <a href="{% url 'detail' movie.id %}">
-                    <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px;">
+                    <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px;">
                 </a>
                 <h5>{{ movie.genre }}</h5>
             </div>
@@ -90,7 +70,7 @@
                     <h5>{{ movie.title }}</h5>
                 </center>
                 <a href="{% url 'detail' movie.id %}">
-                    <img src="{{ movie.movie_logo.url }}" class="img-responsive" style="border-radius: 22px;">
+                    <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px;">
                 </a>
                 <h5>{{ movie.genre }}</h5>
             </div>
