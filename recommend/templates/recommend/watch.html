@@ -10,7 +10,7 @@
             {% for movie in movies %}
                 <div class="col-sm-3">
                     <div class="card">
-                        <img class="card-img-top" src="{{ movie.movie_logo.url }}" alt="{{ movie.title }}">
+                        <img class="card-img-top" src="{{ movie.movie_logo }}" alt="{{ movie.title }}">
                         <div class="card-body">
                             <h5 class="card-title">{{ movie.title }}</h5>
                             <p class="card-text">{{ movie.genre }}</p>
