@@ -38,6 +38,7 @@ from .models import Movie, Myrating, MyList, UserProfile,Comment
 from .models import Report
 from .models import Movie
 from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 # Create your views here.
 def index(request):
@@ -107,8 +108,20 @@ def search_movies(request, movies):
     recommended_movie_ids = recommender.recommend(first_movie_genre, k=18)
     movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
     
+    # Phân trang
+    paginator = Paginator(movies, 20)  # Hiển thị 20 phim trên mỗi trang
+    page = request.GET.get('page')
+    try:
+        movies = paginator.page(page)
+    except PageNotAnInteger:
+        # Nếu 'page' không phải là một số nguyên, trả về trang đầu tiên
+        movies = paginator.page(1)
+    except EmptyPage:
+        # Nếu 'page' lớn hơn số lượng trang, trả về trang cuối cùng
+        movies = paginator.page(paginator.num_pages)
+
     return render(request, 'recommend/search_movies.html', {'movies': movies,
-                                                                    'movies_similar': movies_similar})
+                                                            'movies_similar': movies_similar})
 
 # Show details of the movie
 def detail(request, movie_id):
