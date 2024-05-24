@@ -49,7 +49,7 @@ class SearchEngineRecommender:
             self.model = cached_model
         else:
             self.train_model()
-
+        self.preprocess_genres()
         # Tách các thể loại trong query
         genre_list = genre.split(', ')
         genre_vector = self.mlb.transform([genre_list])
