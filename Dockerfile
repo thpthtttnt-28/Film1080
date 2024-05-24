@@ -14,17 +14,20 @@ ENV PATH=$PATH:$JAVA_HOME/bin
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy all files
-COPY . /app/
+# Copy just the requirements.txt file
+COPY requirements.txt /app/
 
 # Install any needed packages specified in requirements.txt
 RUN pip install -r requirements.txt
+
+# Copy the rest of the files
+COPY . /app/
 
 # Make port 8000 available to the world outside this container
 EXPOSE 8000
 
 # Define environment variable
-ENV NAME intellipurchase
+ENV NAME movie_recommender
 
 # Run gunicorn when the container launches
 CMD ["gunicorn", "-b", "0.0.0.0:8000", "movie_recommender.wsgi:application"]
