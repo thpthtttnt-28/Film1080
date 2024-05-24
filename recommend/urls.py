@@ -2,6 +2,7 @@ from django.urls import path
 from django.urls import path, include  
 from . import views
 from .views import movie_filter 
+from .views import upgrade_to_vip
 
 urlpatterns = [
     path('', views.home, name='index'),
@@ -18,4 +19,5 @@ urlpatterns = [
     path('upgrade_vip/', views.upgrade_vip, name='upgrade_vip'),
     path('user/<str:username>/', views.user_list, name='user_list'),
     path('filter/', movie_filter, name='movie_filter'),
+    path('upgrade-vip/', upgrade_to_vip, name='paypal_payment'),
 ]

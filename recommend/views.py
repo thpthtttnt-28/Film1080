@@ -39,6 +39,15 @@ from .models import Report
 from .models import Movie
 from django.core.paginator import Paginator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+import os
+from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+from paypalcheckoutsdk.core import PayPalHttpClient, SandboxEnvironment
+from paypalcheckoutsdk.orders import OrdersCreateRequest
+from dotenv import load_dotenv
+from django.http import HttpResponse
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 # Create your views here.
 def index(request):
@@ -304,41 +313,86 @@ def profile_edit(request):
     else:
         form = UserProfileForm(instance=user_profile)
     return render(request, 'recommend/profile_edit.html', {'form': form})
-
 @login_required
 def upgrade_vip(request):
     if request.method == 'POST':
-        vip_duration = int(request.POST.get('vip_duration'))
         user_profile = request.user.userprofile
-        
         # Cập nhật trạng thái VIP của người dùng
         user_profile.is_vip = True
-        
-        # Xác định thời gian hết hạn của gói VIP dựa trên loại gói
-        if vip_duration == 1:
-            expire_date = datetime.now() + timedelta(days=30)
-        elif vip_duration == 6:
-            expire_date = datetime.now() + timedelta(days=180)
-        elif vip_duration == 12:
-            expire_date = datetime.now() + timedelta(days=365)
-        
-        # Lưu lại thời gian hết hạn vào cơ sở dữ liệu
-        user_profile.vip_expire_date = expire_date
         user_profile.save()
         
         return redirect('profile')
-
+    
     return render(request, 'recommend/upgrade_vip.html')
 
-@login_required
-def payment_authorize(request):
+def upgrade_to_vip(request):
+    # Xử lý thông tin từ form
+    
+    # Tạo environment PayPal Sandbox
+    environment = SandboxEnvironment(client_id="YOUR_PAYPAL_CLIENT_ID", client_secret="YOUR_PAYPAL_CLIENT_SECRET")
+    client = PayPalHttpClient(environment)
+    
+    # Tạo đơn hàng PayPal
+    request = OrdersCreateRequest()
+    request.prefer("return=representation")
+    request.request_body({
+        "intent": "CAPTURE",
+        "purchase_units": [{
+            "amount": {
+                "currency_code": "USD",
+                "value": "10.00"  # Giá trị của VIP
+            }
+        }]
+    })
+    
+    # Gửi yêu cầu đến PayPal và nhận về link thanh toán
+    response = client.execute(request)
+    return HttpResponseRedirect(response.result.links[1].href)
+
+
+class PayPalClient:
+    def __init__(self):
+        self.client_id = os.getenv('PAYPAL_CLIENT_ID')
+        self.client_secret = os.getenv('PAYPAL_CLIENT_SECRET')
+        self.environment = SandboxEnvironment(client_id=self.client_id, client_secret=self.client_secret)
+        self.client = PayPalHttpClient(self.environment)
+
+@csrf_exempt
+def upgrade_to_vip(request):
     if request.method == 'POST':
-        answer = request.POST.get('answer')
-        if answer == 'A':
-            return True
+        # Lấy giá trị vip_duration từ POST request
+        amount = "10.00"  # Giá trị mặc định
+
+        # Kiểm tra xem người dùng chọn "Pay manually" hay "Pay with PayPal"
+        if request.POST.get('payment_method') == 'manual':
+            request.user.userprofile.is_vip = True
+            request.userprofile.save()
+            
+            # Chuyển hướng người dùng đến trang thành công hoặc trang cần thiết
+            return redirect('success')   # Chỉ định URL thành công của bạn
+
         else:
-            return False
-    return render(request, 'recommend/payment_gateway.html')
+            # Nếu người dùng chọn "Pay with PayPal", chuyển hướng đến PayPal để thực hiện thanh toán
+            paypal_client = PayPalClient()
+            request = OrdersCreateRequest()
+            request.prefer("return=representation")
+            request.request_body({
+                "intent": "CAPTURE",
+                "purchase_units": [{
+                    "amount": {
+                        "currency_code": "USD",
+                        "value": amount
+                    }
+                }]
+            })
+
+            response = paypal_client.client.execute(request)
+            for link in response.result.links:
+                if link.rel == "approve":
+                    approval_url = link.href
+                    return redirect(approval_url)
+
+    return redirect('upgrade_vip')
 
 def user_list(request, username):
     user = get_object_or_404(User, username=username)
