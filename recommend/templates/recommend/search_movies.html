@@ -16,7 +16,6 @@
     </div>
 </div>
 
-
 <p style="text-align:left;">
     <span style="float:right;">
     <h2>Kết quả tìm kiếm</h2>
@@ -35,6 +34,9 @@
                     <a href="{% url 'detail' movie.id %}">
                         <img src="{{ movie.movie_logo}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
                     </a>
+                    {% if movie.is_vip %}
+                        <div class="vip-icon" style="position: absolute; top: 10px; right: 10px; background-color: gold; color: black; padding: 5px; border-radius: 5px;">VIP</div>
+                    {% endif %}
                     <!-- <h5>{{movie.genre}}</h5> -->
                 </div>
             </div>
@@ -42,6 +44,24 @@
         {% endif %}
 </div>
 
+<!-- Pagination -->
+<div class="pagination" style="text-align: center;">
+    {% if movies.has_previous %}
+        <a href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">&laquo; First</a>
+        <a href="?page={{ movies.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Previous</a>
+    {% endif %}
+
+    {% for i in movies.paginator.page_range %}
+        <a href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary{% if movies.number == i %} active{% endif %}">{{ i }}</a>
+    {% endfor %}
+
+    {% if movies.has_next %}
+        <a href="?page={{ movies.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Next</a>
+        <a href="?page={{ movies.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Last &raquo;</a>
+    {% endif %}
+</div>
+<br>
+<hr>
 <p style="text-align:left;">
     <span style="float:right;">
     <h2>Các phim liên quan</h2>
@@ -59,6 +79,9 @@
                     <a href="{% url 'detail' movie.id %}">
                         <img src="{{ movie.movie_logo}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
                     </a>
+                    {% if movie.is_vip %}
+                        <div class="vip-icon" style="position: absolute; top: 10px; right: 10px; background-color: gold; color: black; padding: 5px; border-radius: 5px;">VIP</div>
+                    {% endif %}
                     <!-- <h5>{{movie.genre}}</h5> -->
                 </div>
             </div>
