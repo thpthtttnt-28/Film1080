@@ -24,6 +24,12 @@
             </div>
             <a href="#">
                 <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
+            <!-- Thêm nút play -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                <a href="#" onclick="addToMyList({{ movie.id }})" class="play-button">
+                    <img src="{% static 'recommend/images/play-icon.png' %}" alt="Play" style="width: 60px; height: 60px;">
+                </a>
+            </div>
             </a>
             <div class="share-button">
                 <!-- <span style="font-size: 14px; color: #fff;">Share</span>  Bỏ văn bản "Share" -->
@@ -133,6 +139,26 @@
 </div>
 
 <script>
+function addToMyList(movieId) {
+    var form = document.createElement("form");
+    form.setAttribute("method", "post");
+    form.setAttribute("action", "{% url 'detail' movie.id %}");
+
+    var csrfToken = document.createElement("input");
+    csrfToken.setAttribute("type", "hidden");
+    csrfToken.setAttribute("name", "csrfmiddlewaretoken");
+    csrfToken.setAttribute("value", "{{ csrf_token }}");
+    form.appendChild(csrfToken);
+
+    var watchCheckbox = document.createElement("input");
+    watchCheckbox.setAttribute("type", "hidden");
+    watchCheckbox.setAttribute("name", "watch");
+    watchCheckbox.setAttribute("value", "on");
+    form.appendChild(watchCheckbox);
+
+    document.body.appendChild(form);
+    form.submit();
+}
 function showReportForm(commentId) {
     var form = document.getElementById('report-form-' + commentId);
 if (form.style.display === 'none') {
@@ -156,5 +182,22 @@ href: url,
         window.open(twitterUrl, '_blank');
 }
 </script>
+<style>
+    /* Hiệu ứng hoạt hình cho nút play */
+    .play-button {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    border-radius: 5px; /* Thiết lập góc thành hình vuông */
+    transition: transform 0.3s ease;
+    border: 2px solid transparent; /* Đặt viền mặc định */
+    box-shadow: 0px 0px 0px 0px rgba(255,255,255,0.7); /* Bóng mặc định */
+}
 
+.play-button:hover {
+    transform: scale(1.1);
+    border-color: #ffffff; /* Màu viền khi rê chuột qua */
+    box-shadow: 0px 0px 15px 3px rgba(255,255,255,0.7); /* Hiệu ứng bóng */
+}
+    </style>
 {% endblock %}
