@@ -9,6 +9,7 @@ from pyspark.sql.functions import collect_list, col, udf
 from pyspark.sql.types import ArrayType, StringType
 from pyspark.ml.feature import CountVectorizer
 import joblib
+from django.core.cache import cache
 
 class CoOccurrenceMatrixGenerator:
     def __init__(self, joblib_file='co_occurence_matrix/co_occurrence_matrix.pkl'):
@@ -16,7 +17,11 @@ class CoOccurrenceMatrixGenerator:
         self.spark = SparkSession.builder.appName("CoOccurrenceMatrix").getOrCreate()
 
     def get_or_create_matrix(self):
-        return self._load_matrix()
+        co_occurrence_dict = cache.get('co_occurrence_dict')
+        if not co_occurrence_dict:
+            co_occurrence_dict = self._load_matrix()
+            cache.set('co_occurrence_dict', co_occurrence_dict, timeout=None)
+        return co_occurrence_dict
     
     def _load_matrix(self):
         try:
