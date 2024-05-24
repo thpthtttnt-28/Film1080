@@ -20,7 +20,11 @@
 
 {% if user.is_authenticated %}
 <center style="color:#fff">
-    <h2>Welcome {{ user.username }}!!</h2>
+    {% if user.userprofile.name %}
+        <h2>Welcome {{ user.userprofile.name }}!!</h2>
+    {% else %}
+        <h2>Welcome {{ user.username }}!!</h2>
+{% endif %}
 </center>
 
     <h2>Dựa trên những gì bạn đã xem</h2>

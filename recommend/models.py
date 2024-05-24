@@ -26,9 +26,6 @@ class Movie(models.Model):
     def __str__(self):
         return self.title
 
-    class Meta:
-        managed = False
-
 class Myrating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
@@ -36,9 +33,6 @@ class Myrating(models.Model):
 
     def __str__(self):
         return f'{self.user} rated {self.movie} {self.rating}'
-    
-    class Meta:
-        managed = False
 
 class MyList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -47,9 +41,6 @@ class MyList(models.Model):
 
     def __str__(self):
         return f'{self.user} added {self.movie} to list'
-
-    class Meta:
-        managed = False
         
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -68,7 +59,7 @@ class UserProfile(models.Model):
     is_vip = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.user.username
+        return self.name or self.user.username
     
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
