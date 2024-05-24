@@ -109,7 +109,7 @@ def search_movies(request, movies):
     movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
     
     # Phân trang
-    paginator = Paginator(movies, 20)  # Hiển thị 20 phim trên mỗi trang
+    paginator = Paginator(movies, 30)  # Hiển thị 20 phim trên mỗi trang
     page = request.GET.get('page')
     try:
         movies = paginator.page(page)
