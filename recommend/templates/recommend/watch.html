@@ -8,16 +8,22 @@
     <div class="row">
         {% if movies %}
             {% for movie in movies %}
-                <div class="col-sm-3">
-                    <div class="card">
-                        <img class="card-img-top" src="{{ movie.movie_logo }}" alt="{{ movie.title }}">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ movie.title }}</h5>
-                            <p class="card-text">{{ movie.genre }}</p>
-                            <a href="{% url 'detail' movie.id %}" class="btn btn-primary">View Details</a>
+                {% if movie.movie_logo %}
+                    <div class="col-sm-3">
+                        <div class="thumbnail" style="border-radius: 22px; position: relative;">
+                            <center>
+                                <h5>{{ movie.title }}</h5>
+                            </center>
+                            <a href="{% url 'detail' movie.id %}">
+                                <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px;">
+                                {% if movie.is_vip %}
+                                    <div class="vip-icon" style="position: absolute; top: 10px; right: 10px; background-color: gold; color: black; padding: 5px; border-radius: 5px;">VIP</div>
+                                {% endif %}
+                            </a>
+                            <h5>{{ movie.genre }}</h5>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             {% endfor %}
         {% else %}
             <div class="col">
