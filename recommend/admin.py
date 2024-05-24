@@ -8,7 +8,11 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 admin.site.register(UserProfile, UserProfileAdmin)
 
-admin.site.register(Movie)
+class MovieAdmin(admin.ModelAdmin):
+    list_display = ('title', 'overview', 'genre', 'year', 'is_vip')
+    search_fields = ['title']  # Tìm kiếm theo trường 'title'
+
+admin.site.register(Movie, MovieAdmin)
 
 class MyratingAdmin(admin.ModelAdmin):
     list_display = ('user_id', 'movie_id', 'rating')
