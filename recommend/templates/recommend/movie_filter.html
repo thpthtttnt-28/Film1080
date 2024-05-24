@@ -1,4 +1,3 @@
-<!-- recommend/filtered_movies.html -->
 {% extends 'recommend/base.html' %}
 {% block title %}Filtered Movies{% endblock %}
 
@@ -9,16 +8,22 @@
     <div class="row">
         {% if movies %}
             {% for movie in movies %}
-                <div class="col-sm-3">
-                    <div class="card">
-                        <img class="card-img-top" src="{{ movie.movie_logo }}" alt="{{ movie.title }}">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ movie.title }}</h5>
-                            <p class="card-text">{{ movie.genre }}</p>
-                            <a href="{% url 'detail' movie.id %}" class="btn btn-primary">View Details</a>
+                {% if movie.movie_logo %}
+                    <div class="col-sm-3">
+                        <div class="thumbnail" style="border-radius: 22px; position: relative;">
+                            <center>
+                                <h5>{{ movie.title }}</h5>
+                            </center>
+                            <a href="{% url 'detail' movie.id %}">
+                                <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px;">
+                                {% if movie.is_vip %}
+                                    <div class="vip-icon" style="position: absolute; top: 10px; right: 10px; background-color: gold; color: black; padding: 5px; border-radius: 5px;">VIP</div>
+                                {% endif %}
+                            </a>
+                            <h5>{{ movie.genre }}</h5>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             {% endfor %}
         {% else %}
             <div class="col">
@@ -28,5 +33,32 @@
             </div>
         {% endif %}
     </div>
+
+    <div class="pagination">
+        <ul class="pagination">
+            {% if movies.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.genre %}&genre={{ request.GET.genre }}{% endif %}">&laquo; first</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ movies.previous_page_number }}{% if request.GET.genre %}&genre={{ request.GET.genre }}{% endif %}">previous</a>
+                </li>
+            {% endif %}
+    
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1">Page {{ movies.number }} of {{ movies.paginator.num_pages }}</a>
+            </li>
+    
+            {% if movies.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ movies.next_page_number }}{% if request.GET.genre %}&genre={{ request.GET.genre }}{% endif %}">next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ movies.paginator.num_pages }}{% if request.GET.genre %}&genre={{ request.GET.genre }}{% endif %}">last &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+    
 </div>
 {% endblock %}

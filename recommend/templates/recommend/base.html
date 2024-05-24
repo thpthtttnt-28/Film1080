@@ -76,7 +76,7 @@
                     <li><a href="{% url 'index' %}">Home</a></li>
                     <!-- Khung filter nằm trong navbar -->
                     <li>
-                        <form action="{% url 'filter_movies' %}" method="get" class="navbar-form navbar-left">
+                        <form action="{% url 'movie_filter' %}" method="get" class="navbar-form navbar-left">
                             <div class="form-group">
                                 <label for="genre">Filter by Genre:</label>
                                 <select class="form-control" id="genre" name="genre">

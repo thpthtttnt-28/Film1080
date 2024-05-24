@@ -17,16 +17,22 @@
     <div class="row">
         <!-- Left Movie Info -->
         <div class="col-sm-2 col-md-3">
+            <div class="star-rating" style="position: absolute; top: 10px; right: 10px;">
+                {% load custom_filters %}
+                <span style="color: gold;">Average Rating:</span> <!-- Đổi màu của văn bản thành màu vàng -->
+                <span style="color: gold;">({{ movie_avg_rating|floatformat:2 }})</span> <!-- Đổi màu của điểm đánh giá thành màu vàng -->
+            </div>
             <a href="#">
                 <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
-            </a>
-            <div class="star-rating">
-                {% load custom_filters %}
-                <span>Average Rating:</span>
-                <span>({{ movie_avg_rating|floatformat:2 }})</span>
+            <!-- Thêm nút play -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                <a href="#" onclick="addToMyList({{ movie.id }})" class="play-button">
+                    <img src="{% static 'recommend/images/play-icon.png' %}" alt="Play" style="width: 60px; height: 60px;">
+                </a>
             </div>
-            <!-- Share Button -->
+            </a>
             <div class="share-button">
+                <!-- <span style="font-size: 14px; color: #fff;">Share</span>  Bỏ văn bản "Share" -->
                 <a href="#" onclick="shareOnFacebook('{{ request.build_absolute_uri }}')">
                     <img src="{% static 'recommend/images/facebook-icon.png' %}" alt="Share on Facebook" style="width: 40px; height: 40px;">
                 </a>
@@ -34,7 +40,33 @@
                     <img src="{% static 'recommend/images/twitter-icon.png' %}" alt="Share on Twitter" style="width: 40px; height: 40px;">
                 </a>
             </div>
-
+            <!-- Rating Form -->
+            <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}" onsubmit="return validateForm()" name="ratingForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="row">
+                            <div class="col-lg-14">
+                                <div class="star-rating">
+                                    <span>Rate Movie</span>
+                                    <span class="fa fa-star-o" data-rating="1"></span>
+                                    <span class="fa fa-star-o" data-rating="2"></span>
+                                    <span class="fa fa-star-o" data-rating="3"></span>
+                                    <span class="fa fa-star-o" data-rating="4"></span>
+                                    <span class="fa fa-star-o" data-rating="5"></span>
+                                    
+                                    {% if rate_flag %}
+                                        <input type="hidden" name="rating" class="rating-value" value="{{ movie_rating }}">
+                                    {% else %}
+                                        <input type="hidden" name="rating" class="rating-value" value="0">
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <input type="submit" class="button" value="Submit">
+                    </div>
+                </div>
+            </form>
         </div>
         
         
@@ -42,36 +74,10 @@
         <div class="col-sm-offset-1 col-sm-4 col-md-4">
             <h1 style="color:#fff">{{ movie.title }}</h1>
             <h3><small>Genre: {{ movie.genre }}</small></h3>
+            <h3><small>Year: {{ movie.year }}</small></h3>
+            <p>{{ movie.overview }}</p>
 
             <div class="col-sm-offset-0 col-sm-8">
-                <!-- Rating Form -->
-                <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}" onsubmit="return validateForm()" name="ratingForm">
-                    {% csrf_token %}
-                    <div class="form-group">
-                        <div class="input-group">
-                            <div class="row">
-                                <div class="col-lg-14">
-                                    <div class="star-rating">
-                                        <span>Rate Movie</span>
-                                        <span class="fa fa-star-o" data-rating="1"></span>
-                                        <span class="fa fa-star-o" data-rating="2"></span>
-                                        <span class="fa fa-star-o" data-rating="3"></span>
-                                        <span class="fa fa-star-o" data-rating="4"></span>
-                                        <span class="fa fa-star-o" data-rating="5"></span>
-                                        
-                                        {% if rate_flag %}
-                                            <input type="hidden" name="rating" class="rating-value" value="{{ movie_rating }}">
-                                        {% else %}
-                                            <input type="hidden" name="rating" class="rating-value" value="0">
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            <input type="submit" class="button" value="Submit">
-                        </div>
-                    </div>
-                </form>
-
                 <!-- Watch List Form -->
                 <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}">
                     {% csrf_token %}
@@ -133,26 +139,65 @@
 </div>
 
 <script>
+function addToMyList(movieId) {
+    var form = document.createElement("form");
+    form.setAttribute("method", "post");
+    form.setAttribute("action", "{% url 'detail' movie.id %}");
+
+    var csrfToken = document.createElement("input");
+    csrfToken.setAttribute("type", "hidden");
+    csrfToken.setAttribute("name", "csrfmiddlewaretoken");
+    csrfToken.setAttribute("value", "{{ csrf_token }}");
+    form.appendChild(csrfToken);
+
+    var watchCheckbox = document.createElement("input");
+    watchCheckbox.setAttribute("type", "hidden");
+    watchCheckbox.setAttribute("name", "watch");
+    watchCheckbox.setAttribute("value", "on");
+    form.appendChild(watchCheckbox);
+
+    document.body.appendChild(form);
+    form.submit();
+}
 function showReportForm(commentId) {
     var form = document.getElementById('report-form-' + commentId);
-    if (form.style.display === 'none') {
-        form.style.display = 'block';
-    } else {
-        form.style.display = 'none';
-    }
+if (form.style.display === 'none') {
+form.style.display = 'block';
+} else {
+form.style.display = 'none';
+}
 }
 
 function shareOnFacebook(url) {
-    FB.ui({
-        method: 'share',
-        href: url,
-    }, function(response){});
+FB.ui({
+method: 'share',
+href: url,
+}, function(response){});
 }
 </script>
+
 <script>
     function shareOnTwitter(title, url) {
-        var twitterUrl = "https://twitter.com/intent/tweet?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent(title);
+        var twitterUrl = "https://twitter.com/intent/tweet?url=" + encodeURIComponent(url) + "&text
         window.open(twitterUrl, '_blank');
-    }
-    </script>
+}
+</script>
+<style>
+    /* Hiệu ứng hoạt hình cho nút play */
+    .play-button {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    border-radius: 5px; /* Thiết lập góc thành hình vuông */
+    transition: transform 0.3s ease;
+    border: 2px solid transparent; /* Đặt viền mặc định */
+    box-shadow: 0px 0px 0px 0px rgba(255,255,255,0.7); /* Bóng mặc định */
+}
+
+.play-button:hover {
+    transform: scale(1.1);
+    border-color: #ffffff; /* Màu viền khi rê chuột qua */
+    box-shadow: 0px 0px 15px 3px rgba(255,255,255,0.7); /* Hiệu ứng bóng */
+}
+    </style>
 {% endblock %}
