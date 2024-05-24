@@ -12,7 +12,7 @@
             {% for item in movies %}
                 {% if item.movie.movie_logo %}
                     <div class="col-sm-2 col-md-2">
-                        <div class="thumbnail">
+                        <div class="thumbnail" style="width: 150px; height: 300px; overflow: hidden;">
                             <h4>{{ item.movie.title }}</h4>
                             <a href="{% url 'detail' item.movie.id %}">
                                 <img src="{{ item.movie.movie_logo }}" class="img-responsive" style="width: 100%; height: auto;">
