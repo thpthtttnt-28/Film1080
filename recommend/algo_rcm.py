@@ -64,7 +64,7 @@ class CollaborativeFilteringRecommender:
         cooccurrence_matrix = coo_matrix((data, (row, col)), shape=(num_movies, num_movies))
 
         return cooccurrence_matrix
-    
+
     def get_cooccurrence_matrix_recommendation(self, user_id, k=20):
         # Gợi ý phim dựa trên co-occurrence matrix
         cooccurrence_matrix = self.cooccurrence_matrix(user_id)
@@ -75,9 +75,10 @@ class CollaborativeFilteringRecommender:
 
         # Tính điểm tương tự giữa các phim và chọn ra những phim có điểm tương tự cao nhất
         for movie_id in user_watched_movies:
-            similar_movies = cooccurrence_matrix.getrow(movie_id - 1).toarray().flatten()
-            similar_movie_ids = [i + 1 for i, sim in enumerate(similar_movies) if sim > 0]
-            co_movies.extend(similar_movie_ids)
+            if movie_id - 1 < cooccurrence_matrix.shape[0]:  # Kiểm tra xem index có hợp lệ không
+                similar_movies = cooccurrence_matrix.getrow(movie_id - 1).toarray().flatten()
+                similar_movie_ids = [i + 1 for i, sim in enumerate(similar_movies) if sim > 0]
+                co_movies.extend(similar_movie_ids)
 
         # Lọc ra các phim không trùng lặp và không nằm trong danh sách phim đã xem
         co_movies = list(set(co_movies) - set(user_watched_movies))

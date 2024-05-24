@@ -37,6 +37,7 @@ from django.utils import timezone
 from .models import Movie, Myrating, MyList, UserProfile,Comment
 from .models import Report
 from .models import Movie
+from django.core.paginator import Paginator
 
 # Create your views here.
 def index(request):
@@ -344,26 +345,21 @@ def user_list(request, username):
     movies = MyList.objects.filter(user=user).select_related('movie')
     return render(request, 'recommend/user_list.html', {'user': user, 'movies': movies})
 
-def filter_movies(request):
+def movie_filter(request):
     genre = request.GET.get('genre')
-
+    movies = Movie.objects.all()
+    
     if genre:
-        # Tách các thể loại được nhập vào từ query string
-        genres = [g.strip() for g in genre.split(',')]
-        
-        # Tạo một danh sách các Q object cho mỗi thể loại
-        q_objects = [Q(genre__icontains=g) for g in genres]
+        movies = movies.filter(genre__icontains=genre)
 
-        # Kết hợp các Q object lại với nhau bằng toán tử OR
-        # Điều này có nghĩa là bất kỳ bộ phim nào có ít nhất một trong các thể loại được chọn sẽ được lọc ra
-        movies = Movie.objects.filter(*q_objects).distinct()
-    else:
-        # Nếu không có thể loại nào được chọn, trả về tất cả các bộ phim
-        movies = Movie.objects.all()
+    paginator = Paginator(movies, 20)  # 20 movies per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
     context = {
-        'movies': movies,
+        'movies': page_obj,
     }
+
     return render(request, 'recommend/movie_filter.html', context)
 
 
