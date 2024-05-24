@@ -26,6 +26,9 @@ class Movie(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        managed = False
+
 class Myrating(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE)
@@ -33,6 +36,9 @@ class Myrating(models.Model):
 
     def __str__(self):
         return f'{self.user} rated {self.movie} {self.rating}'
+    
+    class Meta:
+        managed = False
 
 class MyList(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -42,6 +48,9 @@ class MyList(models.Model):
     def __str__(self):
         return f'{self.user} added {self.movie} to list'
 
+    class Meta:
+        managed = False
+        
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='comments')
@@ -79,3 +88,10 @@ class Report(models.Model):
 
     def __str__(self):
         return f'Report by {self.user.username} on {self.comment.id}'
+    
+class CachedModel(models.Model):
+    model_state = models.BinaryField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.created_at)
