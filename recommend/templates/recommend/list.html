@@ -28,12 +28,12 @@
     <div class="row">
         {% for movie in recent_movies %}
         <div class="col-sm-2 col-md-2">
-            <div class="thumbnail" style="border-radius: 22px; position: relative; width: 250px; height: 400px; overflow: hidden;">
+            <div class="thumbnail" style="border-radius: 22px; position: relative;">
                 <center>
                     <h5>{{ movie.title }}</h5>
                 </center>
                 <a href="{% url 'detail' movie.id %}">
-                    <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px; width: 100%; height: auto;">
+                    <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px;">
                     {% if movie.is_vip %}
                         <div class="vip-icon" style="position: absolute; top: 10px; right: 10px; background-color: gold; color: black; padding: 5px; border-radius: 5px;">VIP</div>
                     {% endif %}
