@@ -1,0 +1,21 @@
+{% extends 'recommend/base.html' %}
+{% block body %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Authorization</title>
+</head>
+<body>
+    <h1>Payment Authorization</h1>
+    <form method="post">
+        {% csrf_token %}
+        <input type="checkbox" name="answer" value="A"> Đáp án A<br>
+        <input type="checkbox" name="answer" value="B"> Đáp án B<br>
+        <button type="submit">Xác nhận</button>
+    </form>
+</body>
+</html>
+
+
+{% endblock %}

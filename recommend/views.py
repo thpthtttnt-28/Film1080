@@ -67,17 +67,6 @@ def home(request):
             if movies.exists():
                 return search_movies(request, movies)
 
-        # cfr = CollaborativeFilteringRecommender()
-        # # Lấy user_id của user hiện tại, giả sử user_id = 1
-        # user_id = request.user.id
-
-        # # Lấy thông tin chi tiết của các phim được gợi ý
-        # co_movies = cfr.get_cooccurrence_matrix_recommendation(user_id)
-
-        # # Lọc phim theo thể loại nếu có
-        # if genre:
-        #     co_movies = co_movies.filter(genre=genre)
-
         recent_rcm = RecentRecommender(request.user)
         recent_movies = recent_rcm.recommend(top_n=18)
 
@@ -338,8 +327,18 @@ def upgrade_vip(request):
         user_profile.save()
         
         return redirect('profile')
-    
+
     return render(request, 'recommend/upgrade_vip.html')
+
+@login_required
+def payment_authorize(request):
+    if request.method == 'POST':
+        answer = request.POST.get('answer')
+        if answer == 'A':
+            return True
+        else:
+            return False
+    return render(request, 'recommend/payment_gateway.html')
 
 def user_list(request, username):
     user = get_object_or_404(User, username=username)
