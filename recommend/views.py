@@ -58,15 +58,15 @@ def home(request):
     # Lấy thể loại phim từ yêu cầu GET
     genre = request.GET.get('genre')
 
+    query = request.GET.get('q')
+
+    if query:
+        movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
+        if movies.exists():
+            return search_movies(request, movies)
+        
     # Kiểm tra xem người dùng đã đăng nhập chưa
     if request.user.is_authenticated:
-        query = request.GET.get('q')
-
-        if query:
-            movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
-            if movies.exists():
-                return search_movies(request, movies)
-
         recent_rcm = RecentRecommender(request.user)
         recent_movies = recent_rcm.recommend(top_n=18)
 
@@ -96,7 +96,7 @@ def search_movies(request, movies):
     recommender = SearchEngineRecommender()
     recommended_movie_ids = recommender.recommend(first_movie_genre, k=18)
     movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
-    
+
     return render(request, 'recommend/search_movies.html', {'movies': movies,
                                                             'movies_similar': movies_similar})
 
