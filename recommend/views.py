@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.db.models import Case, When
 import pandas as pd
-from .algo_rcm import get_similar, ContentBasedRecommender, CollaborativeFilteringRecommender
+from .algo_rcm import get_similar, SearchEngineRecommender, CollaborativeFilteringRecommender, get_trending_movies, RecentRecommender
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q, Case, When
@@ -65,20 +65,26 @@ def home(request):
             if movies.exists():
                 return search_movies(request, movies)
 
-        cfr = CollaborativeFilteringRecommender()
-        # Lấy user_id của user hiện tại, giả sử user_id = 1
-        user_id = request.user.id
+        # cfr = CollaborativeFilteringRecommender()
+        # # Lấy user_id của user hiện tại, giả sử user_id = 1
+        # user_id = request.user.id
 
-        # Lấy thông tin chi tiết của các phim được gợi ý
-        co_movies = cfr.get_cooccurrence_matrix_recommendation(user_id)
+        # # Lấy thông tin chi tiết của các phim được gợi ý
+        # co_movies = cfr.get_cooccurrence_matrix_recommendation(user_id)
 
-        # Lọc phim theo thể loại nếu có
-        if genre:
-            co_movies = co_movies.filter(genre=genre)
+        # # Lọc phim theo thể loại nếu có
+        # if genre:
+        #     co_movies = co_movies.filter(genre=genre)
+
+        recent_rcm = RecentRecommender(request.user)
+        recent_movies = recent_rcm.recommend(top_n=18)
+
+        # if genre:
+        #     recent_movies = [movie for movie in recent_movies if movie.genre == genre]
 
         context = {
             'trending_movies': trending_movies,
-            'co_movies': co_movies,
+            'recent_movies': recent_movies,
         }
         return render(request, 'recommend/list.html', context)
 
@@ -92,17 +98,11 @@ def home(request):
     }
     return render(request, 'recommend/list.html', context)
 
-def get_trending_movies():
-    # Gợi ý phim theo số lượt xem trong bảng MyList
-    trending_movie_ids = MyList.objects.values('movie').annotate(total_watch=Count('movie')).order_by('-total_watch')[:12]
-    trending_movies = Movie.objects.filter(id__in=[movie['movie'] for movie in trending_movie_ids])
-    return trending_movies
-
 def search_movies(request, movies):
     # Lấy genre của bộ phim đầu tiên tìm thấy
     first_movie_genre = movies.first().genre
-    # Khởi tạo ContentBasedRecommender và gợi ý các phim tương tự
-    recommender = ContentBasedRecommender()
+    # Khởi tạo SearchEngineRecommender và gợi ý các phim tương tự
+    recommender = SearchEngineRecommender()
     recommended_movie_ids = recommender.recommend(first_movie_genre, k=18)
     movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
     

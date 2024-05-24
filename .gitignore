@@ -4,3 +4,4 @@ settings.json
 *.pyc
 
 recommend/__pycache__/
+test.ipynb
