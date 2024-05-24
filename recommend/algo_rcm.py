@@ -11,6 +11,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from django.db.models import Q, Avg, Count, Case, When
 from .coOccurenceMatrixGenerator import CoOccurrenceMatrixGenerator
+from .models import CachedModel
+import pickle
 
 class SearchEngineRecommender:
     def __init__(self):
@@ -23,16 +25,31 @@ class SearchEngineRecommender:
         self.movies_df['genre'] = self.movies_df['genre'].apply(lambda x: x.split(', '))
         self.genre_matrix = self.mlb.fit_transform(self.movies_df['genre'])
 
+
     def train_model(self):
         # Preprocess genres before creating the model
         self.preprocess_genres()
         # Train kNN model
         self.model = NearestNeighbors(metric='euclidean', algorithm='brute')
         self.model.fit(self.genre_matrix)
+        # Save model to database
+        model_bytes = pickle.dumps(self.model)  # Convert model to bytes
+        CachedModel.objects.create(model_state=model_bytes)
+
+    def get_cached_model(self):
+        cached_model = CachedModel.objects.last()  # Get the last saved model
+        if cached_model:
+            model_bytes = cached_model.model_state
+            return pickle.loads(model_bytes)  # Convert bytes back to model object
+        return None
         
     def recommend(self, genre, k=20):
-        if self.model is None:
+        cached_model = self.get_cached_model()
+        if cached_model:
+            self.model = cached_model
+        else:
             self.train_model()
+
         # Tách các thể loại trong query
         genre_list = genre.split(', ')
         genre_vector = self.mlb.transform([genre_list])
@@ -53,11 +70,19 @@ class RecentRecommender:
         self.mlb = MultiLabelBinarizer()
         self.movies_df = pd.DataFrame(list(Movie.objects.all().values('id', 'title', 'genre')))
         if self.model is None:
-            self.train_knn_model()
+            self.load_cached_knn_model()
 
     def preprocess_genres(self):
         self.movies_df['genre'] = self.movies_df['genre'].apply(lambda x: x.split(', '))
         self.genre_matrix = self.mlb.fit_transform(self.movies_df['genre'])
+
+    def load_cached_knn_model(self):
+        cached_model = CachedModel.objects.last()
+        if cached_model:
+            model_bytes = cached_model.model_state
+            self.model = pickle.loads(model_bytes)
+        else:
+            self.train_knn_model()
 
     def train_knn_model(self):
         if self.model is None:
