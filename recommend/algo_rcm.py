@@ -70,6 +70,7 @@ class RecentRecommender:
         self.mlb = MultiLabelBinarizer()
         self.movies_df = pd.DataFrame(list(Movie.objects.all().values('id', 'title', 'genre')))
         if self.model is None:
+            self.preprocess_genres()
             self.load_cached_knn_model()
 
     def preprocess_genres(self):
