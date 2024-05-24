@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.db.models import Case, When
 import pandas as pd
-from .algo_rcm import get_similar, SearchEngineRecommender, CollaborativeFilteringRecommender, get_trending_movies, RecentRecommender
+from .algo_rcm import get_similar, SearchEngineRecommender, get_trending_movies, RecentRecommender
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db.models import Q, Case, When
@@ -108,18 +108,6 @@ def search_movies(request, movies):
     recommended_movie_ids = recommender.recommend(first_movie_genre, k=18)
     movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
     
-    # Phân trang
-    paginator = Paginator(movies, 20)  # Hiển thị 20 phim trên mỗi trang
-    page = request.GET.get('page')
-    try:
-        movies = paginator.page(page)
-    except PageNotAnInteger:
-        # Nếu 'page' không phải là một số nguyên, trả về trang đầu tiên
-        movies = paginator.page(1)
-    except EmptyPage:
-        # Nếu 'page' lớn hơn số lượng trang, trả về trang cuối cùng
-        movies = paginator.page(paginator.num_pages)
-
     return render(request, 'recommend/search_movies.html', {'movies': movies,
                                                             'movies_similar': movies_similar})
 

@@ -11,22 +11,20 @@ from pyspark.ml.feature import CountVectorizer
 import joblib
 
 class CoOccurrenceMatrixGenerator:
-    def __init__(self, joblib_file='co_occurrence_matrix.pkl'):
+    def __init__(self, joblib_file='co_occurence_matrix/co_occurrence_matrix.pkl'):
         self.joblib_file = joblib_file
         self.spark = SparkSession.builder.appName("CoOccurrenceMatrix").getOrCreate()
 
     def get_or_create_matrix(self):
-        if self._matrix_exists():
-            return self._load_matrix()
-        return self._train_and_save_matrix()
-
-    def _matrix_exists(self):
-        return os.path.exists(self.joblib_file)
-
+        return self._load_matrix()
+    
     def _load_matrix(self):
-        co_occurrence_dict = joblib.load(self.joblib_file)
-        print(f"Co-Occurrence Matrix loaded from {self.joblib_file}")
-        return co_occurrence_dict
+        try:
+            co_occurrence_dict = joblib.load(self.joblib_file)
+            print(f"Co-Occurrence Matrix loaded from {self.joblib_file}")
+            return co_occurrence_dict
+        except FileNotFoundError:
+            return self._train_and_save_matrix()
 
     def _train_and_save_matrix(self):
         print("Training Co-Occurrence Matrix...")
