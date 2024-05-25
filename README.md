@@ -1,4 +1,5 @@
-# Tài liệu hệ thống: [link](https://rainy-infinity-73a.notion.site/T-i-li-u-h-th-ng-Film1080-0d6f5e1d56ee433da7747fb0f2e5600e?pvs=4)
+# Video demo: [link](https://youtu.be/6ODeQfSVcok)
+# Báo cáo: [link](https://www.notion.so/B-o-c-o-h-th-ng-Film1080-8fdf497c8b12463bac4d1f16288597ea)
 
 ## Thành Viên
 
