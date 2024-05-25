@@ -61,9 +61,12 @@ jobs:
             # Pull image mà được push lên DockerHub bên trên
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
     
-            # Dừng và gỡ bỏ container hiện tại (nếu có)
-            sudo docker stop film1080
-            sudo docker rm film1080
+            # Dừng và gỡ bỏ tất cả các container hiện tại sử dụng image film1080 (nếu có)
+            containers=$(sudo docker ps -q --filter "ancestor=${{ secrets.DOCKERHUB_USERNAME }}/film1080")
+            if [ -n "$containers" ]; then
+              sudo docker stop $containers
+              sudo docker rm $containers
+            fi
     
             # Chạy container mới với image đã pull về bên trên
             sudo docker run -d -p 2004:8000 --restart always --name film1080 ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
