@@ -21,8 +21,10 @@ class SearchEngineRecommender:
         self.mlb = MultiLabelBinarizer()
 
     def preprocess_genres(self):
-        # Tách các thể loại cách nhau bằng dấu phẩy
-        self.movies_df['genre'] = self.movies_df['genre'].apply(lambda x: x.split(', '))
+        if not isinstance(self.movies_df['genre'][0], list):
+            # Tách các thể loại cách nhau bằng dấu phẩy
+            self.movies_df['genre'] = self.movies_df['genre'].apply(lambda x: x.split(', '))
+
         self.genre_matrix = self.mlb.fit_transform(self.movies_df['genre'])
 
 
@@ -43,7 +45,7 @@ class SearchEngineRecommender:
             return pickle.loads(model_bytes)  # Convert bytes back to model object
         return None
         
-    def recommend(self, genre, k=20):
+    def recommend(self, genre, k=1):
         cached_model = self.get_cached_model()
         if cached_model:
             self.model = cached_model
@@ -70,7 +72,6 @@ class RecentRecommender:
         self.mlb = MultiLabelBinarizer()
         self.movies_df = pd.DataFrame(list(Movie.objects.all().values('id', 'title', 'genre')))
         if self.model is None:
-            self.preprocess_genres()
             self.load_cached_knn_model()
 
     def preprocess_genres(self):
@@ -80,6 +81,7 @@ class RecentRecommender:
     def load_cached_knn_model(self):
         cached_model = CachedModel.objects.last()
         if cached_model:
+            self.preprocess_genres()
             model_bytes = cached_model.model_state
             self.model = pickle.loads(model_bytes)
         else:
