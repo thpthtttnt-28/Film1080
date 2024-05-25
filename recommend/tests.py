@@ -2,7 +2,7 @@ from django.http import HttpResponseForbidden
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
-from .models import Movie, Myrating, MyList, UserProfile, Comment, Report
+from .models import Products, ProductRating, WatchHistory, UserProfile, Comment, Report, ProductType
 from datetime import datetime, timedelta
 from django.db.models import Avg
 import os
@@ -14,15 +14,16 @@ class TestViews(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(username='testuser', password='testpassword')
         self.client.login(username='testuser', password='testpassword')
+        movie_type, created = ProductType.objects.get_or_create(name='Movie')
         # Tạo nhiều phim để đảm bảo đủ số lượng để gợi ý
         for i in range(20):
-            movie = Movie.objects.create(title=f'Test Movie {i}', genre='Action', is_vip=False, year=2024)
-            MyList.objects.create(user=self.user, movie=movie, watch=False)
-            Myrating.objects.create(user=self.user, movie=movie, rating=5)
+            product = Products.objects.create(title=f'Test product {i}', genre='Action', type=movie_type, is_vip=False, year=2024)
+            WatchHistory.objects.create(user=self.user, product=product, watch=False)
+            ProductRating.objects.create(user=self.user, product=product, rating=5)
         
-        self.movie = Movie.objects.create(title='Test Movie', genre='Action', is_vip=False, year=2024)
-        self.mylist = MyList.objects.create(user=self.user, movie=self.movie, watch=False)
-        self.myrating = Myrating.objects.create(user=self.user, movie=self.movie, rating=5)
+        self.product = Products.objects.create(title='Test product', genre='Action',type=movie_type, is_vip=False, year=2024)
+        self.watchhistory = WatchHistory.objects.create(user=self.user, product=self.product, watch=False)
+        self.productrating = ProductRating.objects.create(user=self.user, product=self.product, rating=5)
         
         os.environ['PYSPARK_PYTHON'] = 'F:\\test\\python.exe'
         os.environ['PYSPARK_DRIVER_PYTHON'] = 'F:\\test\\python.exe'
@@ -33,7 +34,7 @@ class TestViews(TestCase):
         self.assertTemplateUsed(response, 'recommend/list.html')
 
     def test_detail_view(self):
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
+        response = self.client.get(reverse('detail', args=[self.product.id]))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'recommend/detail.html')
 
@@ -76,10 +77,10 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'recommend/user_list.html')
 
-    def test_movie_filter_view(self):
-        response = self.client.get(reverse('movie_filter'))
+    def test_product_filter_view(self):
+        response = self.client.get(reverse('product_filter'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'recommend/movie_filter.html')
+        self.assertTemplateUsed(response, 'recommend/product_filter.html')
 
     def test_home_view_authenticated_user(self):
         self.client.login(username='testuser', password='testpassword')
@@ -88,7 +89,7 @@ class TestViews(TestCase):
 
     def test_detail_view_authenticated_user(self):
         self.client.login(username='testuser', password='testpassword')
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
+        response = self.client.get(reverse('detail', args=[self.product.id]))
         self.assertEqual(response.status_code, 200)
 
     def test_watch_view_authenticated_user(self):
@@ -116,9 +117,9 @@ class TestViews(TestCase):
         response = self.client.get(reverse('user_list', args=[self.user.username]))
         self.assertEqual(response.status_code, 200)
 
-    def test_movie_filter_view_authenticated_user(self):
+    def test_product_filter_view_authenticated_user(self):
         self.client.login(username='testuser', password='testpassword')
-        response = self.client.get(reverse('movie_filter'))
+        response = self.client.get(reverse('product_filter'))
         self.assertEqual(response.status_code, 200)
     
     def test_signUp_view_post_request(self):
@@ -155,125 +156,125 @@ class TestViews(TestCase):
         response = self.client.get(reverse('user_list', args=['invalidusername']))
         self.assertEqual(response.status_code, 404)  # Invalid username should return 404
 
-    def test_movie_filter_view_with_genre(self):
-        response = self.client.get(reverse('movie_filter') + '?genre=Action')
+    def test_product_filter_view_with_genre(self):
+        response = self.client.get(reverse('product_filter') + '?genre=Action')
         self.assertEqual(response.status_code, 200)
 
-    def test_movie_filter_view_pagination(self):
-        response = self.client.get(reverse('movie_filter'))
+    def test_product_filter_view_pagination(self):
+        response = self.client.get(reverse('product_filter'))
         self.assertEqual(response.status_code, 200)
-        self.assertTrue('movies' in response.context)
-        self.assertTrue(len(response.context['movies']) <= 20)  # Should have 20 or less movies per page
+        self.assertTrue('products' in response.context)
+        self.assertTrue(len(response.context['products']) <= 20)  # Should have 20 or less products per page
 
     def test_detail_view_post_request_watch(self):
         self.client.login(username='testuser', password='testpassword')
-        response = self.client.post(reverse('detail', args=[self.movie.id]), {'watch': 'on'})
+        response = self.client.post(reverse('detail', args=[self.product.id]), {'watch': 'on'})
         self.assertEqual(response.status_code, 302)  # Redirects after updating watch status
 
     def test_detail_view_post_request_rating(self):
         self.client.login(username='testuser', password='testpassword')
-        response = self.client.post(reverse('detail', args=[self.movie.id]), {'rating': '4'})
+        response = self.client.post(reverse('detail', args=[self.product.id]), {'rating': '4'})
         self.assertEqual(response.status_code, 302)  # Redirects after submitting rating
 
     def test_detail_view_post_request_comment(self):
         self.client.login(username='testuser', password='testpassword')
-        response = self.client.post(reverse('detail', args=[self.movie.id]), {'comment': 'Test comment'})
+        response = self.client.post(reverse('detail', args=[self.product.id]), {'comment': 'Test comment'})
         self.assertEqual(response.status_code, 302)  # Redirects after submitting comment
 
     def test_detail_view_post_request_report(self):
         self.client.login(username='testuser', password='testpassword')
-        comment = Comment.objects.create(user=self.user, movie=self.movie, text='Test comment')
-        response = self.client.post(reverse('detail', args=[self.movie.id]), {'report': 'report', 'comment_id': comment.id, 'reason': 'Test reason'})
+        comment = Comment.objects.create(user=self.user, product=self.product, text='Test comment')
+        response = self.client.post(reverse('detail', args=[self.product.id]), {'report': 'report', 'comment_id': comment.id, 'reason': 'Test reason'})
         self.assertEqual(response.status_code, 302)  # Redirects after submitting report
 
     def test_detail_view_no_active_user(self):
         self.user.is_active = False
         self.user.save()
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
+        response = self.client.get(reverse('detail', args=[self.product.id]))
         self.assertEqual(response.status_code, 302)
 
-    def test_detail_view_non_vip_user_watch_vip_movie(self):
-        self.movie.is_vip = True
-        self.movie.save()
+    def test_detail_view_non_vip_user_watch_vip_product(self):
+        self.product.is_vip = True
+        self.product.save()
 
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
+        response = self.client.get(reverse('detail', args=[self.product.id]))
 
         self.assertEqual(response.status_code, 404)
 
     def test_detail_view_authenticated_user_with_rating(self):
         self.client.login(username='testuser', password='testpassword')
-        self.myrating.rating = 0  # Rating set to 0
-        self.myrating.save()
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
-        self.assertEqual(response.context['movie_rating'], 0)  # Check if movie rating is set to 0 for authenticated user
+        self.productrating.rating = 0  # Rating set to 0
+        self.productrating.save()
+        response = self.client.get(reverse('detail', args=[self.product.id]))
+        self.assertEqual(response.context['product_rating'], 0)  # Check if product rating is set to 0 for authenticated user
 
     def test_detail_view_authenticated_user_without_rating(self):
         self.client.login(username='testuser', password='testpassword')
-        self.myrating.delete()  # Delete user's rating for the movie
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
-        self.assertEqual(response.context['movie_rating'], 0)  # Check if movie rating is 0 when user hasn't rated the movie yet
+        self.productrating.delete()  # Delete user's rating for the product
+        response = self.client.get(reverse('detail', args=[self.product.id]))
+        self.assertEqual(response.context['product_rating'], 0)  # Check if product rating is 0 when user hasn't rated the product yet
 
     def test_detail_view_avg_rating(self):
-        Myrating.objects.create(user=self.user, movie=self.movie, rating=4)
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
-        self.assertEqual(response.context['movie_avg_rating'], 4.5)  # Check if average rating is calculated correctly
+        ProductRating.objects.create(user=self.user, product=self.product, rating=4)
+        response = self.client.get(reverse('detail', args=[self.product.id]))
+        self.assertEqual(response.context['product_avg_rating'], 4.5)  # Check if average rating is calculated correctly
 
     def test_detail_view_no_avg_rating(self):
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
-        self.assertEqual(response.context['movie_avg_rating'], 5)  # Check if average rating is 0 when no ratings are available
+        response = self.client.get(reverse('detail', args=[self.product.id]))
+        self.assertEqual(response.context['product_avg_rating'], 5)  # Check if average rating is 0 when no ratings are available
 
     def test_detail_view_watch_status(self):
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
+        response = self.client.get(reverse('detail', args=[self.product.id]))
         self.assertFalse(response.context['update'])  # Check if initial watch status is False
 
     def test_detail_view_watch_status_update(self):
         self.client.login(username='testuser', password='testpassword')
-        response = self.client.post(reverse('detail', args=[self.movie.id]), {'watch': 'on'})
-        self.assertTrue(MyList.objects.get(user=self.user, movie=self.movie).watch)  # Check if watch status is updated to True
+        response = self.client.post(reverse('detail', args=[self.product.id]), {'watch': 'on'})
+        self.assertTrue(WatchHistory.objects.get(user=self.user, product=self.product).watch)  # Check if watch status is updated to True
 
     def test_detail_view_comment(self):
-        Comment.objects.create(user=self.user, movie=self.movie, text='Test comment')
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
+        Comment.objects.create(user=self.user, product=self.product, text='Test comment')
+        response = self.client.get(reverse('detail', args=[self.product.id]))
         self.assertTrue(response.context['comments'])  # Check if comments are available
 
     def test_detail_view_no_comment(self):
-        response = self.client.get(reverse('detail', args=[self.movie.id]))
+        response = self.client.get(reverse('detail', args=[self.product.id]))
         self.assertFalse(response.context['comments'])  # Check if no comments are available
 
-    def test_search_movies_view_authenticated_user(self):
-        response = self.client.get(reverse('search_movies'), {'q': 'Test'})
+    def test_search_products_view_authenticated_user(self):
+        response = self.client.get(reverse('search_products'), {'q': 'Test'})
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'recommend/search_movies.html')
-        self.assertContains(response, 'Test Movie')
+        self.assertTemplateUsed(response, 'recommend/search_products.html')
+        self.assertContains(response, 'Test product')
 
     def test_detail_view_post_request_watch_remove(self):
         self.client.login(username='testuser', password='testpassword')
-        response = self.client.post(reverse('detail', args=[self.movie.id]), {'watch': 'off'})
+        response = self.client.post(reverse('detail', args=[self.product.id]), {'watch': 'off'})
         self.assertEqual(response.status_code, 302)  # Redirects after updating watch status
-        self.assertFalse(MyList.objects.get(user=self.user, movie=self.movie).watch)  # Check if watch status is updated to False
+        self.assertFalse(WatchHistory.objects.get(user=self.user, product=self.product).watch)  # Check if watch status is updated to False
 
-    def test_watch_view_no_movies(self):
-        MyList.objects.filter(user=self.user, movie=self.movie).delete()  # Remove movies from the watchlist
+    def test_watch_view_no_products(self):
+        WatchHistory.objects.filter(user=self.user, product=self.product).delete()  # Remove products from the watchlist
         response = self.client.get(reverse('watch'))
         self.assertEqual(response.status_code, 200)
-        self.assertQuerysetEqual(response.context['movies'], [])  # Check if no movies are in the watchlist
+        self.assertQuerysetEqual(response.context['products'], [])  # Check if no products are in the watchlist
 
-    def test_watch_view_with_vip_movies_non_vip_user(self):
-        self.movie.is_vip = True
-        self.movie.save()
+    def test_watch_view_with_vip_products_non_vip_user(self):
+        self.product.is_vip = True
+        self.product.save()
         response = self.client.get(reverse('watch'))
-        self.assertNotIn(self.movie, response.context['movies'])  # Non-VIP user should not see VIP movies in the watchlist
+        self.assertNotIn(self.product, response.context['products'])  # Non-VIP user should not see VIP products in the watchlist
 
     def test_detail_view_comment_creation(self):
         self.client.login(username='testuser', password='testpassword')
-        response = self.client.post(reverse('detail', args=[self.movie.id]), {'comment': 'New comment'})
+        response = self.client.post(reverse('detail', args=[self.product.id]), {'comment': 'New comment'})
         self.assertEqual(response.status_code, 302)  # Redirects after submitting comment
-        self.assertTrue(Comment.objects.filter(user=self.user, movie=self.movie, text='New comment').exists())  # Check if comment is created
+        self.assertTrue(Comment.objects.filter(user=self.user, product=self.product, text='New comment').exists())  # Check if comment is created
 
     def test_detail_view_report_creation(self):
         self.client.login(username='testuser', password='testpassword')
-        comment = Comment.objects.create(user=self.user, movie=self.movie, text='Test comment')
-        response = self.client.post(reverse('detail', args=[self.movie.id]), {'report': 'report', 'comment_id': comment.id, 'reason': 'Test reason'})
+        comment = Comment.objects.create(user=self.user, product=self.product, text='Test comment')
+        response = self.client.post(reverse('detail', args=[self.product.id]), {'report': 'report', 'comment_id': comment.id, 'reason': 'Test reason'})
         self.assertEqual(response.status_code, 302)  # Redirects after submitting report
         self.assertTrue(Report.objects.filter(user=self.user, comment=comment, reason='Test reason').exists())  # Check if report is created
 
