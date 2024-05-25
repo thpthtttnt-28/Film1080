@@ -59,7 +59,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Pull image mà được push lên DockerHub bên trên
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
 
             # Dừng và gỡ bỏ container hiện tại (nếu có)
             sudo docker stop film1080
