@@ -3,52 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upgrade to VIP - Awesome Movie Recommender</title>
+    <title>Confirm Payment</title>
     {% load static %}
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="{% static 'recommend/css/base.css' %}">
     <style>
-        body {
-            background-color: #052642;
-            color: white;
-        }
-        .navbar {
-            background-color: #072d4e;
-        }
-        .navbar-brand {
-            color: #4CAF50;
-        }
-        .navbar-nav a {
-            color: white !important;
-        }
-        .card {
-            background-color: #072d4e;
-            color: white;
-            margin-bottom: 20px;
-        }
-        .card-title {
-            color: #4CAF50;
-            margin-top: 20px;
-        }
-        .card-text {
-            margin-bottom: 20px;
-        }
-        .card-header {
-            background-color: #4CAF50;
-            color: white;
-            text-align: center;
-            font-size: 24px;
-        }
-        .footer {
-            background-color: #072d4e;
-            color: white;
-            text-align: center;
-            padding: 20px 0;
-            position: fixed;
-            left: 0;
-            bottom: 0;
-            width: 100%;
-        }
+        /* Custom styles */
     </style>
 </head>
 <body>
@@ -85,53 +45,37 @@
 </nav>
 
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Upgrade to VIP</h2>
+    <h2 class="text-center mb-4">Confirm Payment</h2>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6 offset-md-3">
             <div class="card">
-                <div class="card-header">VIP 1 Month</div>
                 <div class="card-body">
-                    <h5 class="card-title">$10/month</h5>
-                    <p class="card-text">Enjoy VIP benefits for 1 month.</p>
-                    <form method="post">
+                    <h5 class="card-title">Upgrade to VIP</h5>
+                    <p class="card-text">Choose payment method:</p>
+                    <form method="post" action="{% url 'upgrade_vip' %}">
                         {% csrf_token %}
-                        <input type="hidden" name="vip_duration" value="1">
-                        <button type="submit" class="btn btn-success btn-block">Upgrade Now</button>
+                        <input type="hidden" name="vip_duration" value="{{ vip_duration }}">
+                        <button type="submit" class="btn btn-primary btn-block">Pay manually</button>
                     </form>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">VIP 6 Months</div>
-                <div class="card-body">
-                    <h5 class="card-title">$50/month</h5>
-                    <p class="card-text">Enjoy VIP benefits for 6 months.</p>
-                    <form method="post">
+                    <form method="post" action="{% url 'paypal_payment' %}">
                         {% csrf_token %}
-                        <input type="hidden" name="vip_duration" value="6">
-                        <button type="submit" class="btn btn-success btn-block">Upgrade Now</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">VIP 1 Year</div>
-                <div class="card-body">
-                    <h5 class="card-title">$100/year</h5>
-                    <p class="card-text">Enjoy VIP benefits for 1 year
-                    </p>
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="vip_duration" value="12">
-                        <button type="submit" class="btn btn-success btn-block">Upgrade Now</button>
+                        <input type="hidden" name="vip_duration" value="{{ vip_duration }}">
+                        <button type="submit" class="btn btn-primary btn-block">Pay with PayPal</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<footer class="footer">
+    <div class="container">
+        <div class="text-center">
+            <!-- Social media links -->
+        </div>
+        <div class="text-center mt-2">© 2024 Your Name</div>
+    </div>
+</footer>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>

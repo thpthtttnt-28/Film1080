@@ -1,22 +1,43 @@
+from django.contrib.auth import authenticate, login
+from django.contrib.auth import logout
+from django.shortcuts import render, get_object_or_404, redirect
 from .forms import *
-from django.db.models import Q, Avg, Count, Case, When
+from django.http import Http404
+from .models import Movie, Myrating, MyList
+from django.db.models import Q, Avg, Count
 from django.contrib import messages
+from django.http import HttpResponseRedirect
+from django.db.models import Case, When
 import pandas as pd
 from .algo_rcm import get_similar, SearchEngineRecommender, get_trending_movies, RecentRecommender
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Q, Case, When
+from django.contrib import messages
 from django.http import HttpResponseRedirect, Http404
+import pandas as pd
+from django.contrib.auth import authenticate, login as auth_login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render, get_object_or_404, redirect
 from .forms import SignUpForm, UserProfileForm
 from .models import Movie, Myrating, MyList, UserProfile
+from django.db.models import Q, Case, When
+from django.contrib import messages
+from django.http import HttpResponseRedirect, Http404
+import pandas as pd
+from django.contrib.auth.decorators import login_required
 from social_django.utils import load_strategy, load_backend
 from social_core.backends.google import GoogleOAuth2
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth import authenticate, login as auth_login
 from django.http import HttpResponseForbidden
 from datetime import datetime, timedelta
-from .models import Movie, Myrating, MyList, UserProfile, Comment
+from django.utils import timezone
+from .models import Movie, Myrating, MyList, UserProfile,Comment
 from .models import Report
+from .models import Movie
+from django.core.paginator import Paginator
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import os
 from django.shortcuts import redirect
@@ -29,6 +50,16 @@ dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
 # Create your views here.
+def index(request):
+    movies = Movie.objects.all()
+    query = request.GET.get('q')
+
+    if query:
+        movies = Movie.objects.filter(Q(title__icontains=query)).distinct()
+        return render(request, 'recommend/list.html', {'movies': movies})
+
+    return render(request, 'recommend/list.html', {'movies': movies})
+
 def home(request):
     # Gợi ý phim theo số lượt xem
     trending_movies = get_trending_movies()
@@ -46,10 +77,10 @@ def home(request):
     # Kiểm tra xem người dùng đã đăng nhập chưa
     if request.user.is_authenticated:
         recent_rcm = RecentRecommender(request.user)
-        recent_movies = recent_rcm.recommend(top_n=12)
+        recent_movies = recent_rcm.recommend(top_n=18)
 
-        if genre:
-            recent_movies = [movie for movie in recent_movies if movie.genre == genre]
+        # if genre:
+        #     recent_movies = [movie for movie in recent_movies if movie.genre == genre]
 
         context = {
             'trending_movies': trending_movies,
@@ -72,15 +103,11 @@ def search_movies(request, movies):
     first_movie_genre = movies.first().genre
     # Khởi tạo SearchEngineRecommender và gợi ý các phim tương tự
     recommender = SearchEngineRecommender()
-    recommended_movie_ids = recommender.recommend(first_movie_genre, k=12)
+    recommended_movie_ids = recommender.recommend(first_movie_genre, k=18)
     movies_similar = Movie.objects.filter(id__in=recommended_movie_ids)
 
     return render(request, 'recommend/search_movies.html', {'movies': movies,
                                                             'movies_similar': movies_similar})
-def search_movies_wrapper(request):
-    query = request.GET.get('q', '')
-    movies = Movie.objects.filter(title__icontains=query)
-    return search_movies(request, movies)
 
 # Show details of the movie
 def detail(request, movie_id):
@@ -176,6 +203,48 @@ def watch(request):
         movies = movies.filter(Q(title__icontains=query)).distinct()
 
     return render(request, 'recommend/watch.html', {'movies': movies})
+def get_similar(movie_name, rating, corrMatrix):
+    similar_ratings = corrMatrix[movie_name] * (rating - 2.5)
+    similar_ratings = similar_ratings.sort_values(ascending=False)
+    return similar_ratings
+
+# Recommendation Algorithm
+@login_required
+def recommend(request):
+    if request.user.userprofile.is_vip:
+        movie_rating = pd.DataFrame(list(Myrating.objects.all().values()))
+
+        new_user = movie_rating.user_id.unique().shape[0]
+        current_user_id = request.user.id
+        # Kiểm tra nếu người dùng mới không đánh giá bất kỳ bộ phim nào
+        if current_user_id > new_user:
+            movie = Movie.objects.get(id=19)  # ID của bộ phim mặc định
+            q = Myrating(user=request.user, movie=movie, rating=0)
+            q.save()
+
+        userRatings = movie_rating.pivot_table(index=['user_id'], columns=['movie_id'], values='rating')
+        userRatings = userRatings.fillna(0, axis=1)
+        corrMatrix = userRatings.corr(method='pearson')
+
+        user = pd.DataFrame(list(Myrating.objects.filter(user=request.user).values())).drop(['user_id', 'id'], axis=1)
+        user_filtered = [tuple(x) for x in user.values]
+        movie_id_watched = [each[0] for each in user_filtered]
+
+        similar_movies = pd.DataFrame()
+        for movie, rating in user_filtered:
+            similar_movies = pd.concat([similar_movies, get_similar(movie, rating, corrMatrix)], axis=1)
+
+        similar_movies = similar_movies.sum(axis=1).sort_values(ascending=False)
+        movies_id_recommend = [each for each in similar_movies.index if each not in movie_id_watched]
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(movies_id_recommend)])
+        movie_list = list(Movie.objects.filter(id__in=movies_id_recommend).order_by(preserved)[:10])
+
+        context = {'movie_list': movie_list}
+        return render(request, 'recommend/recommend.html', context)
+    else:
+        messages.error(request, "Only VIP users can access recommendations.")
+        return redirect('profile')
+
 
 # Register user
 def signUp(request):
@@ -202,7 +271,7 @@ def Login(request):
             if user.is_active:
                 login(request, user)
                 # Chuyển hướng đến trang chính sau khi đăng nhập thành công
-                return redirect("home")
+                return redirect("index")
             else:
                 return render(request, 'recommend/login.html', {'error_message': 'Your account is disabled'})
         else:
