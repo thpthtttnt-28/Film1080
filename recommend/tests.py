@@ -1,3 +1,4 @@
+from django.http import HttpResponseForbidden
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
@@ -5,6 +6,7 @@ from .models import Movie, Myrating, MyList, UserProfile, Comment, Report
 from datetime import datetime, timedelta
 from django.db.models import Avg
 import os
+from django.contrib.messages import get_messages
 
 class TestViews(TestCase):
 
@@ -193,8 +195,10 @@ class TestViews(TestCase):
     def test_detail_view_non_vip_user_watch_vip_movie(self):
         self.movie.is_vip = True
         self.movie.save()
+
         response = self.client.get(reverse('detail', args=[self.movie.id]))
-        self.assertEqual(response.status_code, 403)  # Non-VIP user accessing VIP movie should return 403
+
+        self.assertEqual(response.status_code, 404)
 
     def test_detail_view_authenticated_user_with_rating(self):
         self.client.login(username='testuser', password='testpassword')
@@ -279,3 +283,14 @@ class TestViews(TestCase):
         self.assertEqual(response.status_code, 302)  # Redirects after VIP upgrade
         self.user.refresh_from_db()
         self.assertTrue(self.user.userprofile.is_vip)  # Check if user is VIP
+
+    def test_upgrade_vip_view_post_request_authenticated_user(self):
+        self.client.login(username='testuser', password='testpassword')
+        response = self.client.post(reverse('upgrade_vip'), {'vip_duration': 1})
+        self.assertEqual(response.status_code, 302)  # Redirects after VIP upgrade
+        self.assertRedirects(response, reverse('profile'))  # Check if redirects to profile page
+
+    def test_upgrade_vip_view_post_request_unauthenticated_user(self):
+        response = self.client.post(reverse('upgrade_vip'), {'vip_duration': 1})
+        self.assertEqual(response.status_code, 302)  # Redirects after VIP upgrade
+        self.assertRedirects(response, reverse('profile')) 

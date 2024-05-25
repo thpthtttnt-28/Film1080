@@ -97,7 +97,7 @@ class RecentRecommender:
         watched_movies = self._get_watched_movies()
         if not watched_movies:
             return self._get_popular_movies(top_n)
-        watched_movies = watched_movies[:1000] if len(watched_movies) > 1000 else watched_movies
+        watched_movies = watched_movies[:10] if len(watched_movies) > 10 else watched_movies
         combined_recommendations = self._combine_recommendations(
             self._generate_co_occurrence_recommendations(watched_movies),
             self._generate_knn_recommendations(watched_movies, top_n)
