@@ -1,6 +1,6 @@
 # Video demo: [link](https://youtu.be/6ODeQfSVcok)
-# Báo cáo: [link](https://www.notion.so/B-o-c-o-h-th-ng-Film1080-8fdf497c8b12463bac4d1f16288597ea)
-
+# Báo cáo: [link](https://drive.google.com/file/d/1g9XpeJO1sbL2Br0xPcMpLOP1NAKDS65-/view?usp=sharing)
+# Link hệ thống: [link](http://52.62.128.172:2004/)
 ## Thành Viên
 
 1. Bùi Đức Mạnh - 22022602
