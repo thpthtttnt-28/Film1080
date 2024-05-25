@@ -44,21 +44,23 @@ jobs:
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
 
- # Job 2: Deploy
+  # Job 2: Deploy
   deploy:
     needs: build_and_test
     runs-on: ubuntu-22.04
-
+  
     steps:
       - name: Deploy to server
-            ssh -i secrets.SSH_PRIVATE_KEY secrets.SERVER_HOST@secrets.SERVER_HOST
-            # Pull image mà được push lên DockerHub bên trên
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
+        run: |
+          ssh -i secrets.SSH_PRIVATE_KEY secrets.SERVER_HOST@secrets.SERVER_HOST
+          # Pull image mà được push lên DockerHub bên trên
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
+  
+          # Dừng và gỡ bỏ container hiện tại (nếu có)
+          sudo docker stop film1080
+          sudo docker rm film1080
+  
+          # Chạy container mới với image đã pull về bên trên
+          sudo docker run -d -p 2004:8000 --restart always --name film1080 ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
 
-            # Dừng và gỡ bỏ container hiện tại (nếu có)
-            sudo docker stop film1080
-            sudo docker rm film1080
-
-            # Chạy container mới với image đã pull về bên trên
-            sudo docker run -d -p 2004:8000 --restart always --name film1080 ${{ secrets.DOCKERHUB_USERNAME }}/film1080:${{ github.sha }}
 
