@@ -1,22 +1,26 @@
-from django.urls import path
-from django.urls import path, include  
-from . import views
-from .views import movie_filter 
-from .views import upgrade_to_vip
+from django.urls import include, path
+from .views import HomeView
+from .account import (
+    SignUp, Login, Logout, Profile, ProfileEdit, UserList
+)
+
+from .upgrade_vip import UpgradeVIP, UpgradeToVIP
+
+from .movies_view import MovieDetailView, WatchListView, MovieFilterView
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('signup/', views.signUp, name='signup'),
-    path('login/', views.Login, name='login'),
-    path('logout/', views.Logout, name='logout'),
-    path('<int:movie_id>/', views.detail, name='detail'),
-    path('watch/', views.watch, name='watch'),
-    path('oauth/', include('social_django.urls', namespace='social')),  # Thêm dòng này để sử dụng URL của social_django
-    path('profile/', views.profile, name='profile'),  # Trang hồ sơ người dùng
-    path('profile/edit/', views.profile_edit, name='profile_edit'),  # Trang chỉnh sửa hồ sơ
-    path('upgrade_vip/', views.upgrade_vip, name='upgrade_vip'),
-    path('user/<str:username>/', views.user_list, name='user_list'),
-    path('filter/', movie_filter, name='movie_filter'),
-    path('search/', views.search_movies_wrapper, name='search_movies'),
-    path('upgrade-vip/', upgrade_to_vip, name='paypal_payment'),
+    path('', HomeView.as_view(), name='home'),
+    path('movie/<int:pk>/', MovieDetailView.as_view(), name='detail'),
+    path('watch/', WatchListView.as_view(), name='watch'),
+    path('signup/', SignUp.as_view(), name='signup'),
+    path('login/', Login.as_view(), name='login'),
+    path('logout/', Logout.as_view(), name='logout'),
+    path('profile/', Profile.as_view(), name='profile'),
+    path('profile/edit/', ProfileEdit.as_view(), name='profile_edit'),
+    path('upgrade_vip/', UpgradeVIP.as_view(), name='upgrade_vip'),
+    path('upgrade_to_vip/', UpgradeToVIP.as_view(), name='paypal_payment'),
+    path('user/<str:username>/', UserList.as_view(), name='user_list'),
+    path('filter/', MovieFilterView.as_view(), name='movie_filter'),
+    path('oauth/', include('social_django.urls', namespace='social')),
+    path('search/', HomeView.as_view(), name='search_movies'),
 ]
