@@ -19,8 +19,6 @@
         <div class="col-sm-2 col-md-3">
             <div class="star-rating" style="position: absolute; top: 10px; right: 10px;">
                 {% load custom_filters %}
-                <span style="color: gold;">Average Rating:</span> <!-- Đổi màu của văn bản thành màu vàng -->
-                <span style="color: gold;">({{ product_avg_rating|floatformat:2 }})</span> <!-- Đổi màu của điểm đánh giá thành màu vàng -->
             </div>
             <a href="#">
                 <img src="{{ product.product_logo }}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
@@ -31,15 +29,7 @@
                 </a>
             </div>
             </a>
-            <div class="share-button">
-                <!-- <span style="font-size: 14px; color: #fff;">Share</span>  Bỏ văn bản "Share" -->
-                <a href="#" onclick="shareOnFacebook('{{ request.build_absolute_uri }}')">
-                    <img src="{% static 'recommend/images/facebook-icon.png' %}" alt="Share on Facebook" style="width: 40px; height: 40px;">
-                </a>
-                <a href="#" onclick="shareOnTwitter('{{ product.title }}', '{{ request.build_absolute_uri }}')">
-                    <img src="{% static 'recommend/images/twitter-icon.png' %}" alt="Share on Twitter" style="width: 40px; height: 40px;">
-                </a>
-            </div>
+
             <!-- Rating Form -->
             <form class="form-horizontal" role="search" method="post" action="{% url 'detail' product.id %}" onsubmit="return validateForm()" name="ratingForm">
                 {% csrf_token %}
@@ -48,6 +38,9 @@
                         <div class="row">
                             <div class="col-lg-14">
                                 <div class="star-rating">
+                                    <span style="color: gold;">Average Rating:</span> <!-- Đổi màu của văn bản thành màu vàng -->
+                                    <span style="color: gold;">({{ product_avg_rating|floatformat:2 }})</span> <!-- Đổi màu của điểm đánh giá thành màu vàng -->
+                                    <br
                                     <span>Rate product</span>
                                     <span class="fa fa-star-o" data-rating="1"></span>
                                     <span class="fa fa-star-o" data-rating="2"></span>
@@ -100,7 +93,15 @@
                         </div>
                     </div>
                 </form>
-
+                <div class="share-button">
+                    <!-- <span style="font-size: 14px; color: #fff;">Share</span>  Bỏ văn bản "Share" -->
+                    <a href="#" onclick="shareOnFacebook('{{ request.build_absolute_uri }}')">
+                        <img src="{% static 'recommend/images/facebook-icon.png' %}" alt="Share on Facebook" style="width: 40px; height: 40px;">
+                    </a>
+                    <a href="#" onclick="shareOnTwitter('{{ product.title }}', '{{ request.build_absolute_uri }}')">
+                        <img src="{% static 'recommend/images/twitter-icon.png' %}" alt="Share on Twitter" style="width: 40px; height: 40px;">
+                    </a>
+                </div>
                 <!-- Comment Section -->
                 <h3>Comments</h3>
                 <form method="post" action="{% url 'detail' product.id %}">
