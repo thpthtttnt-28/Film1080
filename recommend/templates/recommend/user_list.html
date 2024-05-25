@@ -6,19 +6,19 @@
     <h2>{{ user.username }}'s List</h2>
     <hr>
     <br>
-    <!-- Movie list -->
+    <!-- product list -->
     <div class="row">
-        {% if movies %}
-            {% for item in movies %}
-                {% if item.movie.movie_logo %}
+        {% if products %}
+            {% for item in products %}
+                {% if item.product.product_logo %}
                     <div class="col-sm-2 col-md-2">
                         <div class="thumbnail" style="width: 150px; height: 300px; overflow: hidden;">
-                            <h4>{{ item.movie.title }}</h4>
-                            <a href="{% url 'detail' item.movie.id %}">
-                                <img src="{{ item.movie.movie_logo }}" class="img-responsive" style="width: 100%; height: auto;">
+                            <h4>{{ item.product.title }}</h4>
+                            <a href="{% url 'detail' item.product.id %}">
+                                <img src="{{ item.product.product_logo }}" class="img-responsive" style="width: 100%; height: auto;">
                             </a>
-                            <h5>{{ item.movie.genre }}</h5>
-                            {% if item.movie.is_vip %}
+                            <h5>{{ item.product.genre }}</h5>
+                            {% if item.product.is_vip %}
                                 <div class="vip-icon" style="position: absolute; top: 10px; right: 10px; background-color: gold; color: black; padding: 5px; border-radius: 5px;">VIP</div>
                             {% endif %}
                         </div>
@@ -27,7 +27,7 @@
             {% endfor %}
         {% else %}
             <div class="alert alert-danger">
-                <strong>Sorry!</strong> No movies in {{ user.username }}'s list.
+                <strong>Sorry!</strong> No products in {{ user.username }}'s list.
             </div>
         {% endif %}
     </div>

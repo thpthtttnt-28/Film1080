@@ -1,6 +1,6 @@
 {% extends 'recommend/base.html' %}
 {% load static %}
-{% block title %}{{ movie.title }}{% endblock %}
+{% block title %}{{ product.title }}{% endblock %}
 
 {% block body %}
 {% if messages %}
@@ -15,18 +15,18 @@
 
 <div class="container-fluid col-sm-offset-1">
     <div class="row">
-        <!-- Left Movie Info -->
+        <!-- Left product Info -->
         <div class="col-sm-2 col-md-3">
             <div class="star-rating" style="position: absolute; top: 10px; right: 10px;">
                 {% load custom_filters %}
                 <span style="color: gold;">Average Rating:</span> <!-- Đổi màu của văn bản thành màu vàng -->
-                <span style="color: gold;">({{ movie_avg_rating|floatformat:2 }})</span> <!-- Đổi màu của điểm đánh giá thành màu vàng -->
+                <span style="color: gold;">({{ product_avg_rating|floatformat:2 }})</span> <!-- Đổi màu của điểm đánh giá thành màu vàng -->
             </div>
             <a href="#">
-                <img src="{{ movie.movie_logo }}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
+                <img src="{{ product.product_logo }}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
             <!-- Thêm nút play -->
             <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                <a href="#" onclick="addToMyList({{ movie.id }})" class="play-button">
+                <a href="#" onclick="addToMyList({{ product.id }})" class="play-button">
                     <img src="{% static 'recommend/images/play-icon.png' %}" alt="Play" style="width: 60px; height: 60px;">
                 </a>
             </div>
@@ -36,19 +36,19 @@
                 <a href="#" onclick="shareOnFacebook('{{ request.build_absolute_uri }}')">
                     <img src="{% static 'recommend/images/facebook-icon.png' %}" alt="Share on Facebook" style="width: 40px; height: 40px;">
                 </a>
-                <a href="#" onclick="shareOnTwitter('{{ movie.title }}', '{{ request.build_absolute_uri }}')">
+                <a href="#" onclick="shareOnTwitter('{{ product.title }}', '{{ request.build_absolute_uri }}')">
                     <img src="{% static 'recommend/images/twitter-icon.png' %}" alt="Share on Twitter" style="width: 40px; height: 40px;">
                 </a>
             </div>
             <!-- Rating Form -->
-            <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}" onsubmit="return validateForm()" name="ratingForm">
+            <form class="form-horizontal" role="search" method="post" action="{% url 'detail' product.id %}" onsubmit="return validateForm()" name="ratingForm">
                 {% csrf_token %}
                 <div class="form-group">
                     <div class="input-group">
                         <div class="row">
                             <div class="col-lg-14">
                                 <div class="star-rating">
-                                    <span>Rate Movie</span>
+                                    <span>Rate product</span>
                                     <span class="fa fa-star-o" data-rating="1"></span>
                                     <span class="fa fa-star-o" data-rating="2"></span>
                                     <span class="fa fa-star-o" data-rating="3"></span>
@@ -56,7 +56,7 @@
                                     <span class="fa fa-star-o" data-rating="5"></span>
                                     
                                     {% if rate_flag %}
-                                        <input type="hidden" name="rating" class="rating-value" value="{{ movie_rating }}">
+                                        <input type="hidden" name="rating" class="rating-value" value="{{ product_rating }}">
                                     {% else %}
                                         <input type="hidden" name="rating" class="rating-value" value="0">
                                     {% endif %}
@@ -70,16 +70,16 @@
         </div>
         
         
-        <!-- Right Movie Info -->
+        <!-- Right product Info -->
         <div class="col-sm-offset-1 col-sm-4 col-md-4">
-            <h1 style="color:#fff">{{ movie.title }}</h1>
-            <h3><small>Genre: {{ movie.genre }}</small></h3>
-            <h3><small>Year: {{ movie.year }}</small></h3>
-            <p>{{ movie.overview }}</p>
+            <h1 style="color:#fff">{{ product.title }}</h1>
+            <h3><small>Genre: {{ product.genre }}</small></h3>
+            <h3><small>Year: {{ product.year }}</small></h3>
+            <p>{{ product.overview }}</p>
 
             <div class="col-sm-offset-0 col-sm-8">
                 <!-- Watch List Form -->
-                <form class="form-horizontal" role="search" method="post" action="{% url 'detail' movie.id %}">
+                <form class="form-horizontal" role="search" method="post" action="{% url 'detail' product.id %}">
                     {% csrf_token %}
                     <div class="form-group">
                         <div class="input-group">
@@ -103,7 +103,7 @@
 
                 <!-- Comment Section -->
                 <h3>Comments</h3>
-                <form method="post" action="{% url 'detail' movie.id %}">
+                <form method="post" action="{% url 'detail' product.id %}">
                     {% csrf_token %}
                     <div class="form-group">
                         <textarea name="comment" class="form-control" rows="3" placeholder="Add a comment..."></textarea>
@@ -122,7 +122,7 @@
                         <button class="btn btn-danger" onclick="showReportForm({{ comment.id }})">Report</button>
                     </div>
                     <div id="report-form-{{ comment.id }}" style="display: none; margin-top: 10px;">
-                        <form method="post" action="{% url 'detail' movie.id %}">
+                        <form method="post" action="{% url 'detail' product.id %}">
                             {% csrf_token %}
                             <input type="hidden" name="comment_id" value="{{ comment.id }}">
                             <div class="form-group">
@@ -139,10 +139,10 @@
 </div>
 
 <script>
-function addToMyList(movieId) {
+function addToMyList(productId) {
     var form = document.createElement("form");
     form.setAttribute("method", "post");
-    form.setAttribute("action", "{% url 'detail' movie.id %}");
+    form.setAttribute("action", "{% url 'detail' product.id %}");
 
     var csrfToken = document.createElement("input");
     csrfToken.setAttribute("type", "hidden");
