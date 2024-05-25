@@ -36,16 +36,16 @@ class CoOccurrenceMatrixGenerator:
         queryset = self._get_queryset()
         df = self._create_dataframe(queryset)
         spark_df = self._create_spark_dataframe(df)
-        user_movies = self._group_by_user(spark_df)
-        user_movies = self._convert_movies_to_string(user_movies)
-        co_occurrence_matrix = self._create_co_occurrence_matrix(user_movies)
+        user_products = self._group_by_user(spark_df)
+        user_products = self._convert_products_to_string(user_products)
+        co_occurrence_matrix = self._create_co_occurrence_matrix(user_products)
         co_occurrence_dict = self._convert_to_dict(co_occurrence_matrix)
         self._save_matrix(co_occurrence_dict)
         return co_occurrence_dict
 
     def _get_queryset(self):
-        from .models import MyList
-        return MyList.objects.filter(watch=True).values('user_id', 'movie_id')
+        from .models import WatchHistory
+        return WatchHistory.objects.filter(watch=True).values('user_id', 'product_id')
 
     def _create_dataframe(self, queryset):
         return pd.DataFrame(list(queryset))
@@ -54,16 +54,16 @@ class CoOccurrenceMatrixGenerator:
         return self.spark.createDataFrame(df)
 
     def _group_by_user(self, spark_df):
-        return spark_df.groupBy("user_id").agg(collect_list("movie_id").alias("movies"))
+        return spark_df.groupBy("user_id").agg(collect_list("product_id").alias("products"))
 
-    def _convert_movies_to_string(self, user_movies):
-        convert_to_string_udf = udf(lambda movie_ids: [str(movie_id) for movie_id in movie_ids], ArrayType(StringType()))
-        return user_movies.withColumn("movies", convert_to_string_udf(col("movies")))
+    def _convert_products_to_string(self, user_products):
+        convert_to_string_udf = udf(lambda product_ids: [str(product_id) for product_id in product_ids], ArrayType(StringType()))
+        return user_products.withColumn("products", convert_to_string_udf(col("products")))
 
-    def _create_co_occurrence_matrix(self, user_movies):
-        cv = CountVectorizer(inputCol="movies", outputCol="features", binary=True)
-        model = cv.fit(user_movies)
-        result = model.transform(user_movies)
+    def _create_co_occurrence_matrix(self, user_products):
+        cv = CountVectorizer(inputCol="products", outputCol="features", binary=True)
+        model = cv.fit(user_products)
+        result = model.transform(user_products)
         return result.select("features").rdd \
             .map(lambda row: row["features"].toArray()) \
             .flatMap(lambda x: [(i, j) for i in x for j in x]) \

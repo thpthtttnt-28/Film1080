@@ -3,7 +3,7 @@ from django.views.generic import TemplateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .models import MyList
+from .models import WatchHistory
 from django.contrib.auth.models import User
 from .forms import SignUpForm, UserProfileForm
 import os
@@ -74,5 +74,5 @@ class ProfileEdit(LoginRequiredMixin, FormView):
 class UserList(View):
     def get(self, request, username, *args, **kwargs):
         user = get_object_or_404(User, username=username)
-        movies = MyList.objects.filter(user=user).select_related('movie')
-        return render(request, 'recommend/user_list.html', {'user': user, 'movies': movies})
+        products = WatchHistory.objects.filter(user=user).select_related('product')
+        return render(request, 'recommend/user_list.html', {'user': user, 'products': products})

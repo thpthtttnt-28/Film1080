@@ -10,17 +10,17 @@
 
 	<div class="container-fluid">
 
-    <!-- Movie list -->
+    <!-- product list -->
     <div class="row">
-            {% if movie_list %}
-                {% for movie in movie_list %}
+            {% if product_list %}
+                {% for product in product_list %}
                     <div class="col-sm-2 col-md-2 ">
                         <div class="thumbnail" style="border-radius: 22px 22px 22px 22px;">
-                            <center><h4>{{movie.title}}</h4></center>
-                            <a href="{% url 'detail' movie.id %}">
-                                <img src="{{ movie.movie_logo}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
+                            <center><h4>{{product.title}}</h4></center>
+                            <a href="{% url 'detail' product.id %}">
+                                <img src="{{ product.product_logo}}" class="img-responsive" style="border-radius: 22px 22px 22px 22px;">
                             </a>
-<!--                            <center><h5>{{movie.genre}}</h5></center>-->
+<!--                            <center><h5>{{product.genre}}</h5></center>-->
                         </div>
                     </div>
                 {% endfor %}

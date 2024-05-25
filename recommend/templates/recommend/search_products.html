@@ -6,7 +6,7 @@
         <form class="form-horizontal" role="search" method="get" action=''>
             <div class="form-group">
                 <div class="input-group">
-                    <input type="text" class="form-control input-lg " name="q" value="{{ request.GET.q }}" placeholder="Search Movies "/>
+                    <input type="text" class="form-control input-lg " name="q" value="{{ request.GET.q }}" placeholder="Search products "/>
                     <span class='input-group-btn'>
                         <button class='button1' type='submit'>Search</button>
                     </span>
@@ -24,20 +24,20 @@
 <hr>
 <br>
 
-<!-- Movie list -->
+<!-- product list -->
 <div class="row">
-    {% if movies %}
-    {% for movie in movies %}
+    {% if products %}
+    {% for product in products %}
         <div class="col-sm-2 col-md-2">
             <div class="thumbnail" style="border-radius: 22px; width: 250px; height: 400px; overflow: hidden;">
-                <center><h5>{{movie.title}}</h5></center>
-                <a href="{% url 'detail' movie.id %}">
-                    <img src="{{ movie.movie_logo}}" class="img-responsive fixed-size" style="width: 100%; height: auto;">
+                <center><h5>{{product.title}}</h5></center>
+                <a href="{% url 'detail' product.id %}">
+                    <img src="{{ product.product_logo}}" class="img-responsive fixed-size" style="width: 100%; height: auto;">
                 </a>
-                {% if movie.is_vip %}
+                {% if product.is_vip %}
                     <div class="vip-icon" style="position: absolute; top: 10px; right: 10px; background-color: gold; color: black; padding: 5px; border-radius: 5px;">VIP</div>
                 {% endif %}
-                <!-- <h5>{{movie.genre}}</h5> -->
+                <!-- <h5>{{product.genre}}</h5> -->
             </div>
         </div>
     {% endfor %}
@@ -46,22 +46,22 @@
 
 <!-- Pagination -->
 <div class="pagination-wrapper" style="text-align: center;">
-    {% if movies.has_previous %}
+    {% if products.has_previous %}
         <a href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">&laquo; First</a>
-        <a href="?page={{ movies.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Previous</a>
+        <a href="?page={{ products.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Previous</a>
     {% endif %}
 
     <div class="pagination" style="display: inline-block;">
-        {% for i in movies.paginator.page_range %}
+        {% for i in products.paginator.page_range %}
             {% if forloop.counter <= 10 %}
-                <a href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary{% if movies.number == i %} active{% endif %}">{{ i }}</a>
+                <a href="?page={{ i }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary{% if products.number == i %} active{% endif %}">{{ i }}</a>
             {% endif %}
         {% endfor %}
     </div>
 
-    {% if movies.paginator.num_pages > 10 %}
-        <a href="?page={{ movies.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Next</a>
-        <a href="?page={{ movies.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Last &raquo;</a>
+    {% if products.paginator.num_pages > 10 %}
+        <a href="?page={{ products.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Next</a>
+        <a href="?page={{ products.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}" class="btn btn-primary">Last &raquo;</a>
     {% endif %}
 </div>
 
@@ -87,18 +87,18 @@
 <br>
 
 <div class="row">
-    {% if movies_similar %}
-        {% for movie in movies_similar %}
+    {% if products_similar %}
+        {% for product in products_similar %}
             <div class="col-sm-2 col-md-2">
                 <div class="thumbnail" style="border-radius: 22px; width: 250px; height: 400px; overflow: hidden;">
-                    <center><h5>{{movie.title}}</h5></center>
-                    <a href="{% url 'detail' movie.id %}">
-                        <img src="{{ movie.movie_logo}}" class="img-responsive fixed-size" style="width: 100%; height: auto;">
+                    <center><h5>{{product.title}}</h5></center>
+                    <a href="{% url 'detail' product.id %}">
+                        <img src="{{ product.product_logo}}" class="img-responsive fixed-size" style="width: 100%; height: auto;">
                     </a>
-                    {% if movie.is_vip %}
+                    {% if product.is_vip %}
                         <div class="vip-icon" style="position: absolute; top: 10px; right: 10px; background-color: gold; color: black; padding: 5px; border-radius: 5px;">VIP</div>
                     {% endif %}
-                    <!-- <h5>{{movie.genre}}</h5> -->
+                    <!-- <h5>{{product.genre}}</h5> -->
                 </div>
             </div>
         {% endfor %}
