@@ -1,9 +1,8 @@
 from django.contrib.auth.models import User
 from django import forms
 from .models import UserProfile
-from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login, authenticate
+from django.contrib.auth.hashers import make_password
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -39,6 +38,7 @@ class SignUpForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data['email']
+        user.password = make_password(self.cleaned_data['password1'])  # Mã hoá mật khẩu trước khi lưu
         if commit:
             user.save()
             UserProfile.objects.get_or_create(user=user)
